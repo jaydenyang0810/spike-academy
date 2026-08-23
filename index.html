@@ -276,7 +276,7 @@ body.py-mode .pypane{display:flex}
 .pyhi .a{color:#2E6FB5;font-weight:700}
 .pyhi .n{color:#8A5A00;font-weight:600}
 .pyhi .s{color:#0B7A3E}
-.pyhi .c{color:var(--ink-3);font-style:italic}
+.pyhi .c{color:var(--ink-3)}
 
 .pybar{
   flex-shrink:0;display:flex;align-items:center;gap:10px;
@@ -4399,14 +4399,14 @@ const CUR = [
       steps: [
         st('用 print( ) 印出一句話。試試看：print("Hello")',
            'Use print( ) to show a message. Try: print("Hello")',
-           { pyOnly: true, py: '# 印出一句話 / print a message\n',
+           { pyOnly: true, py: '# print a message\n',
              pyWin: out => out.some(l => l.trim().length > 0) }),
         st('變數是一個有名字的盒子。把 age 設成 10，再用 f 字串印出 age = 10。',
            'A variable is a named box. Set age to 10, then use an f-string to print: age = 10',
            { pyOnly: true, py: 'age = \n', pyWin: out => out.some(l => /age\s*=\s*10/.test(l)) }),
         st('電腦很會算數。印出 7 乘以 6 的答案。',
            'Computers are good at sums. Print the answer to 7 times 6.',
-           { pyOnly: true, py: '# 用 * 代表乘 / * means multiply\n', pyWin: out => out.some(l => /\b42\b/.test(l)) })
+           { pyOnly: true, py: '# * means multiply\n', pyWin: out => out.some(l => /\b42\b/.test(l)) })
       ]
     },
     {
@@ -6632,7 +6632,7 @@ function pyStarter(st) {
     '',
     'async def main():'
   ].concat(body);
-  lines.push('    ' + L1('# 在這裡寫你的程式', '# write your program here'));
+  lines.push('    # write your program here');
   lines.push('    ');
   lines.push('');
   lines.push('runloop.run(main())');
