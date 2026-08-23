@@ -6365,9 +6365,21 @@ function spikeModules() {
     stop: sy('stop', () => { stopAllSounds(); return null; })
   };
 
+  const ENUM_TO_NAME = {};
+  Object.keys(COLOR_ENUM).forEach(k => { ENUM_TO_NAME[COLOR_ENUM[k]] = k; });
+
+  const light = {
+    POWER: 0, CONNECT: 1,
+    color: sy('color', (lightId, col) => {
+      const name = ENUM_TO_NAME[col];
+      S.centerColor = (name && PAINT_HEX[name]) ? name : null;
+      drawHub(); drawField(); return null;
+    })
+  };
+
   const hub = {
     port: { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5 },
-    light_matrix, motion_sensor, sound
+    light_matrix, motion_sensor, sound, light
   };
 
   return {
@@ -6375,6 +6387,7 @@ function spikeModules() {
     'hub.light_matrix': light_matrix,
     'hub.motion_sensor': motion_sensor,
     'hub.sound': sound,
+    'hub.light': light,
     color: Object.assign({}, COLOR_ENUM),
 
     motor: {
@@ -6525,7 +6538,7 @@ function pyPrint(text, cls) {
 
 /* ------------------------------------------------------------------ editor */
 const PY_KEYWORDS = /\b(if|elif|else|while|for|in|def|return|break|continue|pass|and|or|not|True|False|None|import|from|async|await|global)\b/g;
-const PY_API = /\b(motor_pair|motor|color_sensor|distance_sensor|force_sensor|light_matrix|motion_sensor|runloop|hub|port|color|sound|print|range|len|str|int|abs|round)\b/g;
+const PY_API = /\b(motor_pair|motor|color_sensor|distance_sensor|force_sensor|light_matrix|motion_sensor|runloop|hub|port|color|sound|light|print|range|len|str|int|abs|round)\b/g;
 
 function pyHighlight(src) {
   const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -6609,7 +6622,8 @@ function pyStarter(st) {
   if (anyOf('sn_isdist', 'sn_dist')) imports.push('distance_sensor');
   if (anyOf('sn_isforce', 'sn_force')) imports.push('force_sensor');
   if (anyOf('sn_isyaw', 'sn_yaw', 'sn_resetyaw')) fromHub.push('motion_sensor');
-  if (anyOf('lt_show', 'lt_showfor', 'lt_off', 'lt_write', 'lt_bright', 'lt_pixel', 'lt_center')) fromHub.push('light_matrix');
+  if (anyOf('lt_show', 'lt_showfor', 'lt_off', 'lt_write', 'lt_bright', 'lt_pixel')) fromHub.push('light_matrix');
+  if (has('lt_center')) fromHub.push('light');
   if (anyOf('sd_play', 'sd_start', 'sd_stop', 'sd_volume')) fromHub.push('sound');
 
   const lines = [
