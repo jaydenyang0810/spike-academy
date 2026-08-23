@@ -3827,7 +3827,7 @@ const CATS = [
    reaches the goal without leaving the field or hitting a wall.
    ========================================================================== */
 
-const G = { c: 8, r: 6 };
+const G = { c: 8.5, r: 6.5 };
 
 function st(zh, en, cfg) { return Object.assign({ zh, en }, cfg); }
 
@@ -3848,16 +3848,16 @@ const CUR = [
         st('看積木左邊的圖案。用粉紅色（兩個齒輪）的積木，前進 3 格。',
            'Look at the icon on the left of each block. Use a PINK block (two gears) to drive forward 3 squares.',
            { blocksOnly: true, blocks: ['ev_start', 'mv_move'], need: ['mv_move'],
-             spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 4.5, r: 3 } }),
+             spawn: { c: 1.5, r: 3.5, a: 90 }, goal: { c: 4.5, r: 3.5 } }),
         st('藍色積木只轉一顆馬達。讓 E 馬達（你的手臂）順時針轉 2 圈，看看手臂會怎麼動。',
            'Blue blocks turn ONE motor. Run motor E — your arm — clockwise for 2 rotations and watch it move.',
            { blocksOnly: true, blocks: ['ev_start', 'mt_run'], need: ['mt_run'], win: S => S.armRot >= 1.9,
-             spawn: { c: 3.5, r: 3, a: 90 }, goal: null }),
+             spawn: { c: 3.5, r: 3.5, a: 90 }, goal: null }),
         st('兩種都用：先前進 3 格，再把手臂舉起來（E 馬達順時針 1 圈）。',
            'Use both: drive forward 3 squares, then raise the arm (motor E clockwise 1 rotation).',
            { blocksOnly: true, blocks: ['ev_start', 'mv_move', 'mt_run'], need: ['mv_move', 'mt_run'],
              win: S => S.atGoal() && S.armRot >= 0.9,
-             spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 4.5, r: 3 } })
+             spawn: { c: 1.5, r: 3.5, a: 90 }, goal: { c: 4.5, r: 3.5 } })
       ]
     },
     {
@@ -3870,18 +3870,18 @@ const CUR = [
            { pyZh: '用 motor_pair.pair( ) 告訴機器人輪子接在哪兩個連接埠，再前進 4 格。',
              pyEn: 'Use motor_pair.pair( ) to tell the robot which two ports its wheels are on, then drive 4 squares.',
              blocks: ['ev_start', 'mv_setmotors', 'mv_move'], need: ['mv_setmotors'],
-             spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 5.5, r: 3 }, pair: 'AB',
+             spawn: { c: 1.5, r: 3.5, a: 90 }, goal: { c: 5.5, r: 3.5 }, pair: 'AB',
              whyZh: '設成別的連接埠，機器人就不知道要轉哪兩顆馬達，當然不會動。看看集線器上哪兩個埠是粉紅色的。',
              whyEn: 'With the wrong ports the robot does not know which motors to spin, so it stays still. Look at which two ports are pink on the hub.' }),
         st('故意設成 A+B 執行一次，看看會發生什麼事。然後改成正確的連接埠抵達目標。',
            'Run it once with A+B on purpose and see what happens. Then set the correct ports and reach the target.',
            { blocks: ['ev_start', 'mv_setmotors', 'mv_move'], need: ['mv_setmotors'],
-             spawn: { c: 1.5, r: 4, a: 90 }, goal: { c: 5.5, r: 4 }, pair: 'AB' }),
+             spawn: { c: 1.5, r: 4.5, a: 90 }, goal: { c: 5.5, r: 4.5 }, pair: 'AB' }),
         st('設定好輪子，前進 3 格，再用 E 馬達放下手臂（逆時針 1 圈）。',
            'Set the wheels, drive 3 squares, then lower the arm with motor E (counter-clockwise 1 rotation).',
            { blocks: ['ev_start', 'mv_setmotors', 'mv_move', 'mt_run'], need: ['mv_setmotors', 'mt_run'],
              win: S => S.atGoal() && S.armDir === 'CCW' && S.armRot >= 0.9,
-             spawn: { c: 1.5, r: 2, a: 90 }, goal: { c: 4.5, r: 2 }, pair: 'AB' })
+             spawn: { c: 1.5, r: 2.5, a: 90 }, goal: { c: 4.5, r: 2.5 }, pair: 'AB' })
       ]
     },
     {
@@ -3893,19 +3893,19 @@ const CUR = [
            'Run the arm clockwise 1 rotation to raise it, then counter-clockwise 1 rotation to put it back.',
            { blocks: ['ev_start', 'mt_run'], need: ['mt_run'],
              win: S => S.armRot >= 1.9 && S.armDir === 'CCW',
-             spawn: { c: 3.5, r: 3, a: 90 }, goal: null }),
+             spawn: { c: 3.5, r: 3.5, a: 90 }, goal: null }),
         st('慢一點比較穩：先「將速度設定為 30%」，再讓手臂順時針轉 2 圈。',
            'Slower is steadier: set the motor speed to 30%, then run the arm clockwise 2 rotations.',
            { pyZh: '慢一點比較穩。Python 的速度單位是「度/秒」，不是百分比——用大約 200 的速度讓手臂順時針轉 2 圈。',
              pyEn: 'Slower is steadier. In Python velocity is degrees per second, not a percentage — run the arm clockwise 2 rotations at about 200.',
              blocks: ['ev_start', 'mt_speed', 'mt_run'], need: ['mt_speed', 'mt_run'],
              win: S => S.armRot >= 1.9 && S.armSpeed <= 40,
-             spawn: { c: 3.5, r: 3, a: 90 }, goal: null }),
+             spawn: { c: 3.5, r: 3.5, a: 90 }, goal: null }),
         st('手臂也可以用「度」：前進 2 格，再讓手臂順時針轉 720 度（等於 2 圈）。',
            'The arm takes degrees too: drive 2 squares, then run it clockwise 720 degrees — the same as 2 rotations.',
            { blocks: ['ev_start', 'mv_move', 'mt_run'], need: ['mt_run'],
              win: S => S.atGoal() && S.armRot >= 1.9,
-             spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 3.5, r: 3 } })
+             spawn: { c: 1.5, r: 3.5, a: 90 }, goal: { c: 3.5, r: 3.5 } })
       ]
     }
   ]
@@ -3922,17 +3922,17 @@ const CUR = [
       steps: [
         st('目標在前方 5 格。數一數，然後一次就走到。',
            'The target is 5 squares ahead. Count them, then get there in one move.',
-           { blocks: ['ev_start', 'mv_move'], spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 6.5, r: 3 } }),
+           { blocks: ['ev_start', 'mv_move'], spawn: { c: 1.5, r: 3.5, a: 90 }, goal: { c: 6.5, r: 3.5 } }),
         st('前進去拿星星，再倒退回到起點的綠色方框。方向選「↓」就是後退。',
            'Drive out to the star, then reverse back into the green home box. The "↓" direction means backwards.',
-           { blocks: ['ev_start', 'mv_move'], spawn: { c: 1.5, r: 3, a: 90 },
-             goal: { c: 1.5, r: 3, kind: 'home' },
-             items: [{ c: 5.5, r: 3 }], win: S => S.atGoal() && S.gotItems === 1 }),
+           { blocks: ['ev_start', 'mv_move'], spawn: { c: 1.5, r: 3.5, a: 90 },
+             goal: { c: 1.5, r: 3.5, kind: 'home' },
+             items: [{ c: 5.5, r: 3.5 }], win: S => S.atGoal() && S.gotItems === 1 }),
         st('把單位換成「度」：360 度＝1 圈＝1 格。用「度」前進 1080 度抵達目標。',
            'Switch the unit to degrees: 360 degrees = 1 rotation = 1 square. Drive 1080 degrees to the target.',
            { pyZh: 'Python 的 move_for_degrees 本來就是用「度」：360 度＝1 圈＝1 格。開 1080 度抵達目標。',
              pyEn: 'move_for_degrees already works in degrees: 360 degrees = 1 rotation = 1 square. Drive 1080 degrees to the target.',
-             blocks: ['ev_start', 'mv_move'], spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 4.5, r: 3 },
+             blocks: ['ev_start', 'mv_move'], spawn: { c: 1.5, r: 3.5, a: 90 }, goal: { c: 4.5, r: 3.5 },
              whyZh: '記得把積木上的下拉選單從「圈」改成「度」。',
              whyEn: 'Remember to change the dropdown on the block from rotations to degrees.' })
       ]
@@ -3949,12 +3949,12 @@ const CUR = [
         st('牆擋住了直線。從上面繞過去，抵達旗子。',
            'A wall blocks the straight path. Go around the top of it and reach the flag.',
            { blocks: ['ev_start', 'mv_move', 'mv_steer'],
-             spawn: { c: 1.5, r: 5, a: 0 }, goal: { c: 6.5, r: 1, kind: 'flag' },
+             spawn: { c: 1.5, r: 5.5, a: 0 }, goal: { c: 6.5, r: 1.5, kind: 'flag' },
              walls: [{ c: 3, r: 2, w: 0.4, h: 4 }] }),
         st('倒車入庫：開過去、轉個彎，然後用「↓」倒退進綠色車位。',
            'Reverse parking: drive across, turn, then use "↓" to back into the green bay.',
            { blocks: ['ev_start', 'mv_move', 'mv_steer'],
-             spawn: { c: 1.5, r: 2, a: 90 }, goal: { c: 5.5, r: 4, kind: 'home' } })
+             spawn: { c: 1.5, r: 2.5, a: 90 }, goal: { c: 5.5, r: 4.5, kind: 'home' } })
       ]
     },
     {
@@ -3965,11 +3965,11 @@ const CUR = [
         st('把移動速度設成 100%，然後衝 6 格。',
            'Set the movement speed to 100%, then sprint 6 squares.',
            { blocks: ['ev_start', 'mv_speed', 'mv_move'], need: ['mv_speed'],
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 6.5, r: 3 } }),
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 6.5, r: 3.5 } }),
         st('慢慢來比較準：把速度設成 20%，開 2 格，剛好停在小小的綠色方框裡。',
            'Slow is accurate: set the speed to 20%, drive 2 squares and stop inside the small green box.',
            { blocks: ['ev_start', 'mv_speed', 'mv_move'], need: ['mv_speed'],
-             spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 3.5, r: 3, kind: 'zone', tol: 0.4 } }),
+             spawn: { c: 1.5, r: 3.5, a: 90 }, goal: { c: 3.5, r: 3.5, kind: 'zone', tol: 0.4 } }),
         st('走一個 Z 字形：前進 2 格、右轉直角、前進 2 格、左轉直角、前進 2 格。',
            'Drive a Z: forward 2, turn right one corner, forward 2, turn left one corner, forward 2.',
            { blocks: ['ev_start', 'mv_move', 'mv_steer'],
@@ -3995,13 +3995,13 @@ const CUR = [
         st('用迴圈收集全部 4 顆星星。它們排成一直線，每顆間隔 1 格。',
            'Use a loop to collect all 4 stars. They are in a line, 1 square apart.',
            { blocks: ['ev_start', 'ct_repeat', 'mv_move'], need: ['ct_repeat'],
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: null,
-             items: [{ c: 1.5, r: 3 }, { c: 2.5, r: 3 }, { c: 3.5, r: 3 }, { c: 4.5, r: 3 }],
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: null,
+             items: [{ c: 1.5, r: 3.5 }, { c: 2.5, r: 3.5 }, { c: 3.5, r: 3.5 }, { c: 4.5, r: 3.5 }],
              win: S => S.gotItems === 4 }),
         st('每走一格就轉一次手臂：重複 4 次（前進 1 格＋E 馬達順時針 1 圈）。',
            'Turn the arm on every square: repeat 4 times (forward 1 + motor E clockwise 1 rotation).',
            { blocks: ['ev_start', 'ct_repeat', 'mv_move', 'mt_run'], need: ['ct_repeat', 'mt_run'],
-             spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 5.5, r: 3 },
+             spawn: { c: 1.5, r: 3.5, a: 90 }, goal: { c: 5.5, r: 3.5 },
              win: S => S.atGoal() && S.armRot >= 3.9 })
       ]
     },
@@ -4013,7 +4013,7 @@ const CUR = [
         st('用「重複 3 次（重複 2 次（前進 1 格））」走完 6 格。',
            'Use "repeat 3 times (repeat 2 times (forward 1))" to cover 6 squares.',
            { blocks: ['ev_start', 'ct_repeat', 'mv_move'], need: ['ct_repeat'],
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 6.5, r: 3 } }),
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 6.5, r: 3.5 } }),
         st('用巢狀迴圈畫兩次正方形：重複 2 次（重複 4 次（前進 1 格、右轉直角））。',
            'Draw the square twice with nested loops: repeat 2 times (repeat 4 times (forward 1, turn right one corner)).',
            { blocks: ['ev_start', 'ct_repeat', 'mv_move', 'mv_steer'], need: ['ct_repeat'],
@@ -4036,15 +4036,15 @@ const CUR = [
            { pyZh: '用 while True: 讓手臂一直轉。轉幾圈之後按「停止」，看看結果。',
              pyEn: 'Use while True: to spin the arm forever. Let it turn a few times, then press Stop.',
              blocks: ['ev_start', 'ct_forever', 'mt_run'], need: ['ct_forever', 'mt_run'],
-             win: S => S.armRot >= 2, spawn: { c: 3.5, r: 3, a: 90 }, goal: null }),
+             win: S => S.armRot >= 2, spawn: { c: 3.5, r: 3.5, a: 90 }, goal: null }),
         st('一格一格慢慢走：重複 4 次（前進 1 格、等待 1 秒）。',
            'Step forward one square at a time: repeat 4 times (forward 1, wait 1 seconds).',
            { blocks: ['ev_start', 'ct_repeat', 'mv_move', 'ct_wait'], need: ['ct_repeat', 'ct_wait'],
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 4.5, r: 3 } }),
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 4.5, r: 3.5 } }),
         st('讓手臂揮手 3 次：重複 3 次（順時針 1 圈、等待 0.5 秒、逆時針 1 圈、等待 0.5 秒）。',
            'Wave the arm 3 times: repeat 3 times (clockwise 1, wait 0.5 seconds, counter-clockwise 1, wait 0.5 seconds).',
            { blocks: ['ev_start', 'ct_repeat', 'mt_run', 'ct_wait'], need: ['ct_repeat', 'ct_wait'],
-             win: S => S.armRot >= 5.5, spawn: { c: 3.5, r: 3, a: 90 }, goal: null })
+             win: S => S.armRot >= 5.5, spawn: { c: 3.5, r: 3.5, a: 90 }, goal: null })
       ]
     }
   ]
@@ -4063,19 +4063,19 @@ const CUR = [
            'Use "start moving ↑", then "wait until" colour is red, then "stop moving". You must stop ON the red line.',
            { blocks: ['ev_start', 'mv_start', 'ct_waituntil', 'sn_iscolor', 'mv_stop'],
              need: ['mv_start', 'ct_waituntil', 'mv_stop'], win: onColor('RED'),
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 5.5, r: 3, kind: 'line' },
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 5.5, r: 3.5, kind: 'line' },
              paint: [{ c: 5, r: 0, w: 1, h: 6, col: 'RED' }] }),
         st('先經過藍線，不要停！只在紅線停下來。',
            'Drive over the blue line without stopping. Stop only on the RED line.',
            { blocks: ['ev_start', 'mv_start', 'ct_waituntil', 'sn_iscolor', 'mv_stop'],
              need: ['mv_start', 'ct_waituntil', 'mv_stop'], win: onColor('RED'),
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 6.5, r: 3, kind: 'line' },
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 6.5, r: 3.5, kind: 'line' },
              paint: [{ c: 3, r: 0, w: 1, h: 6, col: 'BLUE' }, { c: 6, r: 0, w: 1, h: 6, col: 'RED' }] }),
         st('三條線：紅、藍、黃。只在黃線停下來，前面兩條都要開過去。',
            'Three lines: red, blue and yellow. Stop only on the yellow one — drive straight over the other two.',
            { blocks: ['ev_start', 'mv_start', 'ct_waituntil', 'sn_iscolor', 'mv_stop'],
              need: ['ct_waituntil'], win: onColor('YELLOW'),
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 6.5, r: 3, kind: 'line' },
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 6.5, r: 3.5, kind: 'line' },
              paint: [{ c: 2, r: 0, w: 1, h: 6, col: 'RED' }, { c: 4, r: 0, w: 1, h: 6, col: 'BLUE' },
                      { c: 6, r: 0, w: 1, h: 6, col: 'YELLOW' }] })
       ]
@@ -4089,20 +4089,20 @@ const CUR = [
            'Wrap "if-then-else" inside "repeat forever": if it sees red, stop moving — otherwise start moving.',
            { blocks: ['ev_start', 'ct_forever', 'ct_ifelse', 'sn_iscolor', 'mv_start', 'mv_stop', 'ct_stopall'],
              need: ['ct_ifelse'], win: onColor('RED'),
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 5.5, r: 3, kind: 'line' },
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 5.5, r: 3.5, kind: 'line' },
              paint: [{ c: 5, r: 0, w: 1, h: 6, col: 'RED' }] }),
         st('「重複執行直到」顏色是綠色。走過紅色和藍色都不要停。',
            'Use "repeat until" colour is green. Do not stop for red or blue.',
            { blocks: ['ev_start', 'ct_repeatuntil', 'sn_iscolor', 'mv_move', 'mv_stop'],
              need: ['ct_repeatuntil'], win: onColor('GREEN'),
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 6.5, r: 3, kind: 'line' },
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 6.5, r: 3.5, kind: 'line' },
              paint: [{ c: 2, r: 0, w: 1, h: 6, col: 'RED' }, { c: 4, r: 0, w: 1, h: 6, col: 'BLUE' },
                      { c: 6, r: 0, w: 1, h: 6, col: 'GREEN' }] }),
         st('往上開，看到藍色方塊就停下來，向右轉一個直角，再開到旗子那裡。',
            'Drive up, stop when you see the blue square, turn right one corner, then drive to the flag.',
            { blocks: ['ev_start', 'mv_start', 'ct_waituntil', 'sn_iscolor', 'mv_stop', 'mv_move', 'mv_steer'],
              need: ['ct_waituntil', 'mv_steer'],
-             spawn: { c: 3.5, r: 5, a: 0 }, goal: { c: 6.5, r: 3.4, kind: 'flag', tol: 0.7 },
+             spawn: { c: 3.5, r: 5.5, a: 0 }, goal: { c: 6.5, r: 3.5, kind: 'flag', tol: 0.7 },
              paint: [{ c: 3, r: 2, w: 1, h: 1, col: 'BLUE' }] })
       ]
     },
@@ -4115,7 +4115,7 @@ const CUR = [
            'A black line reflects very little light. Find it with "is reflection < 30%", then stop.',
            { blocks: ['ev_start', 'mv_start', 'ct_waituntil', 'sn_isreflect', 'mv_stop'],
              need: ['sn_isreflect'], win: onColor('BLACK'),
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 5.5, r: 3, kind: 'line' },
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 5.5, r: 3.5, kind: 'line' },
              paint: [{ c: 5, r: 0, w: 1, h: 6, col: 'BLACK' }] }),
         st('這次用「如果⋯那麼⋯否則」：反射 < 30% 就停止，否則繼續前進。記得用「重複執行」包起來。',
            'Now with if-then-else: if reflection is under 30% stop, otherwise keep moving. Wrap it in a repeat block.',
@@ -4123,13 +4123,13 @@ const CUR = [
              pyEn: 'Wrap an if / else inside while True: if reflection is under 30 stop, otherwise keep moving.',
              blocks: ['ev_start', 'ct_forever', 'ct_ifelse', 'sn_isreflect', 'mv_start', 'mv_stop', 'ct_stopall'],
              need: ['ct_ifelse', 'sn_isreflect'], win: onColor('BLACK'),
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 5.5, r: 3, kind: 'line' },
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 5.5, r: 3.5, kind: 'line' },
              paint: [{ c: 5, r: 0, w: 1, h: 6, col: 'BLACK' }] }),
         st('紅線、藍線、黑線都在路上。把門檻調到只有最暗的黑線會讓它停下來。',
            'A red, a blue and a black line lie ahead. Pick a threshold low enough that only the darkest one stops it.',
            { blocks: ['ev_start', 'mv_start', 'ct_waituntil', 'sn_isreflect', 'mv_stop'],
              need: ['sn_isreflect'], win: onColor('BLACK'),
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 6.5, r: 3, kind: 'line' },
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 6.5, r: 3.5, kind: 'line' },
              paint: [{ c: 2, r: 0, w: 1, h: 6, col: 'RED' }, { c: 4, r: 0, w: 1, h: 6, col: 'BLUE' },
                      { c: 6, r: 0, w: 1, h: 6, col: 'BLACK' }],
              whyZh: '紅色大約 45%、藍色大約 38%、黑色只有 7%。門檻要設在 38% 以下才行。',
@@ -4148,17 +4148,17 @@ const CUR = [
       dZh: '距離感測器像蝙蝠一樣，量出前面有多遠。集線器旁邊會顯示現在的公分數。',
       dEn: 'The distance sensor works like a bat. The hub strip shows the live reading in cm.',
       steps: [
-        st('一直往前開，等到「距離近於 15 公分」再停。停在綠色框裡，不要撞牆！',
-           'Drive forward and stop when "distance nearer than 15 cm". Stop inside the green box — do not crash!',
+        st('一直往前開，等到「距離近於 30 公分」再停。停在綠色框裡，不要撞牆！',
+           'Drive forward and stop when "distance nearer than 30 cm". Stop inside the green box — do not crash!',
            { blocks: ['ev_start', 'mv_start', 'ct_waituntil', 'sn_isdist', 'mv_stop'],
              need: ['sn_isdist'],
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 6.05, r: 3, kind: 'zone', tol: 0.75 },
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 5.5, r: 3.5, kind: 'zone', tol: 0.6 },
              walls: [{ c: 7, r: 1, w: 0.5, h: 4 }] }),
         st('這次要更靠近：等到「距離近於 5 公分」才停。',
            'Get closer this time: stop only when "distance nearer than 5 cm".',
            { blocks: ['ev_start', 'mv_start', 'ct_waituntil', 'sn_isdist', 'mv_stop'],
              need: ['sn_isdist'],
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 6.4, r: 3, kind: 'zone', tol: 0.4 },
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 6.5, r: 3.5, kind: 'zone', tol: 0.5 },
              walls: [{ c: 7, r: 1, w: 0.5, h: 4 }] }),
         st('開到牆前停下，倒退 1 格，向右轉一個直角，再開到旗子。',
            'Stop before the wall, reverse 1 square, turn right one corner, then drive to the flag.',
@@ -4177,12 +4177,12 @@ const CUR = [
            'Wait until the force sensor is pressed, then drive 3 squares. After pressing Run, click the robot!',
            { blocks: ['ev_start', 'ct_waituntil', 'sn_isforce', 'mv_move'],
              need: ['sn_isforce'],
-             spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 4.5, r: 3 } }),
+             spawn: { c: 1.5, r: 3.5, a: 90 }, goal: { c: 4.5, r: 3.5 } }),
         st('一直開到保險桿碰到箱子為止，然後停下、倒退 1 格，再舉起手臂（E 馬達順時針 1 圈）。',
            'Drive until the bumper touches the box, then stop, reverse 1 square, and raise the arm (motor E clockwise 1 rotation).',
            { blocks: ['ev_start', 'mv_start', 'ct_waituntil', 'sn_isforce', 'mv_stop', 'mv_move', 'mt_run'],
              need: ['sn_isforce', 'mt_run'],
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 4.45, r: 3, kind: 'zone', tol: 0.85 },
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 4.5, r: 3.5, kind: 'zone', tol: 0.6 },
              walls: [{ c: 6.0, r: 2.2, w: 1.2, h: 1.6 }],
              win: S => S.atGoal() && S.armRot >= 0.9 }),
         st('把保險桿當開關用兩次：等它被按下→前進 2 格→再等它被按下→右轉直角→前進 2 格。',
@@ -4206,13 +4206,13 @@ const CUR = [
            'The same wall, but turn with the gyro this time. Reset the yaw angle to 0 before every turn!',
            { blocks: ['ev_start', 'sn_resetyaw', 'mv_startsteer', 'ct_waituntil', 'sn_isyaw', 'mv_stop', 'mv_move'],
              need: ['sn_resetyaw', 'sn_isyaw'],
-             spawn: { c: 1.5, r: 5, a: 0 }, goal: { c: 6.5, r: 1, kind: 'flag', tol: 0.6 },
+             spawn: { c: 1.5, r: 5.5, a: 0 }, goal: { c: 6.5, r: 1.5, kind: 'flag', tol: 0.6 },
              walls: [{ c: 3, r: 2, w: 0.4, h: 4 }] }),
         st('陀螺儀什麼角度都能轉。轉到偏航角超過 45 度，再前進 3 格走一條斜線。',
            'The gyro handles any angle. Turn until the yaw angle passes 45 degrees, then drive 3 squares along the diagonal.',
            { blocks: ['ev_start', 'sn_resetyaw', 'mv_startsteer', 'ct_waituntil', 'sn_isyaw', 'mv_stop', 'mv_move'],
              need: ['sn_resetyaw', 'sn_isyaw'],
-             spawn: { c: 1.5, r: 4.5, a: 0 }, goal: { c: 3.6, r: 2.4, tol: 0.7 } })
+             spawn: { c: 1.5, r: 4.5, a: 0 }, goal: { c: 3.5, r: 2.5, tol: 0.7 } })
       ]
     }
   ]
@@ -4232,7 +4232,7 @@ const CUR = [
            { pyZh: '把變數 A 設成 4，然後把 A 放進 move_for_degrees 的度數裡（記得 1 格＝360 度）。',
              pyEn: 'Set a variable A to 4, then use A for the degrees in move_for_degrees (remember 1 square = 360 degrees).',
              blocks: ['ev_start', 'va_set', 'va_num', 'va_get', 'mv_move'], need: ['va_set', 'va_get'],
-             spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 5.5, r: 3 } }),
+             spawn: { c: 1.5, r: 3.5, a: 90 }, goal: { c: 5.5, r: 3.5 } }),
         st('變數也可以拿來轉彎：把 B 設成一個直角的馬達度數，再用 B 走一個 L 形。',
            'Variables work for turning too: set B to the motor degrees of one corner, then drive an L shape using B.',
            { blocks: ['ev_start', 'va_set', 'va_num', 'va_get', 'mv_move', 'mv_steer'],
@@ -4288,13 +4288,13 @@ const CUR = [
              pyEn: 'Wrap "start moving → wait for red → stop" into one async function, then await it.',
              blocks: ['ev_start', 'my_define', 'my_call', 'mv_start', 'ct_waituntil', 'sn_iscolor', 'mv_stop'],
              need: ['my_call'], win: S => onColor('RED')(S) && S.myCalls >= 1,
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 5.5, r: 3, kind: 'line' },
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 5.5, r: 3.5, kind: 'line' },
              paint: [{ c: 5, r: 0, w: 1, h: 6, col: 'RED' }] }),
         st('開到紅線停下，舉起手臂，然後倒退 2 格回到綠色區域。',
            'Stop on the red line, raise the arm, then reverse 2 squares back into the green zone.',
            { blocks: ['ev_start', 'mv_start', 'ct_waituntil', 'sn_iscolor', 'mv_stop', 'mt_run', 'mv_move'],
              need: ['sn_iscolor', 'mt_run'],
-             spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 2.6, r: 3, kind: 'zone', tol: 0.6 },
+             spawn: { c: 0.5, r: 3.5, a: 90 }, goal: { c: 2.5, r: 3.5, kind: 'zone', tol: 0.6 },
              paint: [{ c: 5, r: 0, w: 1, h: 6, col: 'RED' }],
              win: S => S.atGoal() && S.armRot >= 0.9 }),
         st('完整比賽路線：開到牆前停下、向右轉一個直角、開到綠色區域，最後舉起手臂。',
@@ -4325,15 +4325,15 @@ const CUR = [
            { pyZh: '用 light_matrix.show_image( ) 顯示一個內建圖案，例如 light_matrix.IMAGE_HEART。看看場地上的機器人！',
              pyEn: 'Use light_matrix.show_image( ) with a built-in pattern such as light_matrix.IMAGE_HEART. Watch the robot on the field!',
              blocks: ['ev_start', 'lt_show'], need: ['lt_show'], win: S => S.matrixCount > 0,
-             spawn: { c: 3.5, r: 3, a: 90 }, goal: null }),
+             spawn: { c: 3.5, r: 3.5, a: 90 }, goal: null }),
         st('做一個會閃的圖案：點亮一個圖案 1 秒，再點亮另一個不一樣的圖案。',
            'Make it flash: turn on one pattern for 1 second, then turn on a different one.',
            { blocks: ['ev_start', 'lt_show', 'lt_showfor', 'ct_wait', 'lt_off'], need: ['lt_showfor'],
-             win: S => S.matrixCount >= 2, spawn: { c: 3.5, r: 3, a: 90 }, goal: null }),
+             win: S => S.matrixCount >= 2, spawn: { c: 3.5, r: 3.5, a: 90 }, goal: null }),
         st('用「寫入」顯示你名字的第一個英文字母，再把中間按鈕的燈設成紅色。',
            'Use "write" to show the first letter of your name, then set the center button light to red.',
            { blocks: ['ev_start', 'lt_write', 'lt_center', 'lt_bright'], need: ['lt_write', 'lt_center'],
-             win: S => S.wrote && S.centerColor === 'RED', spawn: { c: 3.5, r: 3, a: 90 }, goal: null })
+             win: S => S.wrote && S.centerColor === 'RED', spawn: { c: 3.5, r: 3.5, a: 90 }, goal: null })
       ]
     },
     {
@@ -4346,17 +4346,17 @@ const CUR = [
            { pyZh: '用 sound.beep(freq, duration, volume) 發出聲音。換不同的 freq 數字聽聽看。',
              pyEn: 'Make a sound with sound.beep(freq, duration, volume). Try different freq numbers and listen.',
              blocks: ['ev_start', 'sd_play', 'sd_volume'], need: ['sd_play'], win: S => S.beeps > 0,
-             spawn: { c: 3.5, r: 3, a: 90 }, goal: null }),
+             spawn: { c: 3.5, r: 3.5, a: 90 }, goal: null }),
         st('開到星星那裡，抵達之後播放「Win」慶祝一下。',
            'Drive to the star, then play the "Win" sound to celebrate when you arrive.',
            { blocks: ['ev_start', 'mv_move', 'sd_play'], need: ['sd_play'],
-             spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 5.5, r: 3 },
+             spawn: { c: 1.5, r: 3.5, a: 90 }, goal: { c: 5.5, r: 3.5 },
              win: S => S.atGoal() && S.beeps > 0 }),
         st('做一段節奏：重複 4 次（播放一個聲音、等待 0.5 秒）。',
            'Make a rhythm: repeat 4 times (play a sound, wait 0.5 seconds).',
            { blocks: ['ev_start', 'ct_repeat', 'sd_play', 'ct_wait', 'sd_volume'],
              need: ['ct_repeat', 'sd_play'], win: S => S.beeps >= 4,
-             spawn: { c: 3.5, r: 3, a: 90 }, goal: null })
+             spawn: { c: 3.5, r: 3.5, a: 90 }, goal: null })
       ]
     },
     {
@@ -4367,14 +4367,14 @@ const CUR = [
         st('一邊走一邊亮：重複 3 次（點亮圖案 0.5 秒、前進 1 格）。',
            'Light up as you go: repeat 3 times (turn on a pattern for 0.5 seconds, forward 1).',
            { blocks: ['ev_start', 'ct_repeat', 'lt_showfor', 'mv_move'], need: ['ct_repeat', 'lt_showfor'],
-             spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 4.5, r: 3 },
+             spawn: { c: 1.5, r: 3.5, a: 90 }, goal: { c: 4.5, r: 3.5 },
              win: S => S.atGoal() && S.matrixCount >= 3 }),
         st('燈光配聲音：重複 4 次（播放聲音、點亮圖案 0.3 秒）。',
            'Light and sound together: repeat 4 times (play a sound, turn on a pattern for 0.3 seconds).',
            { blocks: ['ev_start', 'ct_repeat', 'sd_play', 'lt_showfor', 'lt_center'],
              need: ['ct_repeat', 'sd_play', 'lt_showfor'],
              win: S => S.beeps >= 4 && S.matrixCount >= 4,
-             spawn: { c: 3.5, r: 3, a: 90 }, goal: null }),
+             spawn: { c: 3.5, r: 3.5, a: 90 }, goal: null }),
         st('最終表演：開到綠色區域，舉起手臂，亮出你的圖案，再播放一個聲音慶祝。',
            'The final show: drive to the green zone, raise the arm, show your pattern and play a sound to celebrate.',
            { blocks: ['ev_start', 'mv_move', 'mv_steer', 'mt_run', 'lt_show', 'sd_play', 'lt_center', 'my_define', 'my_call'],
@@ -4457,7 +4457,7 @@ const SANDBOX = {
   id: 'sandbox', zh: '自由創作', en: 'Free Build',
   steps: [ st('自由創作模式：所有積木都可以用，想做什麼都行。',
               'Free build: every block is unlocked. Make anything you like.',
-              { blocks: '*', spawn: { c: 1.5, r: 3, a: 90 }, goal: null, win: () => false }) ]
+              { blocks: '*', spawn: { c: 1.5, r: 3.5, a: 90 }, goal: null, win: () => false }) ]
 };
 /* ==========================================================================
    Part 3 — simulator, execution engine, UI
@@ -4465,6 +4465,23 @@ const SANDBOX = {
 
 /* One wheel rotation = one grid square = 27.6 cm (standard SPIKE wheel).
    That constant is what makes the cm readings on the distance sensor real. */
+/* ROBOT GEOMETRY, in grid squares.
+   Everything is sized so the whole robot — chassis, wheels, and the arm at any
+   angle — fits inside a single square. The robot then only ever crosses a grid
+   line while it is actually driving across one, never while standing still.
+       corner reach at any rotation = hypot(HALF_W, HALF_H) = 0.461 < 0.5  ✔
+       arm reach                    = 0.218 + 0.17 + 0.045 = 0.433 < 0.461 ✔ */
+const BODY_W = 0.52, BODY_H = 0.60;
+const WHEEL_W = 0.09;                          // outboard, each side
+const HALF_W = BODY_W / 2 + WHEEL_W;           // 0.35
+const HALF_H = BODY_H / 2;                     // 0.30
+/* The sensors sit exactly one half-square ahead of centre. That is what makes
+   a line-following stop land the robot on a square centre: the painted bands
+   start on grid lines, so stopping when the sensor reaches one puts the robot
+   half a square back from it — dead centre of the square behind. */
+const SENSOR_AT = 0.5;
+const WALL_PAD = 0.36;                         // a shade over HALF_W, for collisions
+
 const CM_PER_SQ = 27.6;          // 88 mm SPIKE wheel: one rotation covers 27.6 cm
 const TRACK_CM  = 17.57;         // distance between the two drive wheels
 
@@ -4619,37 +4636,40 @@ function freshState() {
 /* ---------------------------------------------------------------- geometry */
 function sensorPos() {                       // colour sensor sits at the front
   const a = S.yaw * Math.PI / 180;
-  return { c: S.c + Math.sin(a) * 0.42, r: S.r - Math.cos(a) * 0.42 };
+  return { c: S.c + Math.sin(a) * SENSOR_AT, r: S.r - Math.cos(a) * SENSOR_AT };
 }
 function paintAt(p) {
   const list = step.paint || [];
   for (let i = list.length - 1; i >= 0; i--) {
     const q = list[i];
-    if (p.c >= q.c && p.c <= q.c + q.w && p.r >= q.r && p.r <= q.r + q.h) return q.col;
+    /* a hair of tolerance: driving in small increments accumulates rounding, so a
+       sensor that should land exactly on a band edge can fall a whisker short */
+    const e = 1e-6;
+    if (p.c >= q.c - e && p.c <= q.c + q.w + e && p.r >= q.r - e && p.r <= q.r + q.h + e) return q.col;
   }
   return 'WHITE';
 }
 function walls() { return step.walls || []; }
 function hitsWall(c, r, pad) {
-  const k = pad === undefined ? 0.34 : pad;
+  const k = pad === undefined ? WALL_PAD : pad;
   return walls().some(w => c > w.c - k && c < w.c + w.w + k && r > w.r - k && r < w.r + w.h + k);
 }
 /** forward raycast to the nearest wall or field edge, in cm */
 function distCm() {
   const a = S.yaw * Math.PI / 180, dx = Math.sin(a), dy = -Math.cos(a);
-  let d = 0.42;
+  let d = SENSOR_AT;
   while (d < 8) {
     const c = S.c + dx * d, r = S.r - (-dy) * d * 0 + dy * d;
     if (c < 0 || c > grid.c || r < 0 || r > grid.r) break;
     if (hitsWall(c, r, 0.02)) break;
     d += 0.02;
   }
-  return Math.min(200, Math.max(0, (d - 0.42) * CM_PER_SQ));
+  return Math.min(200, Math.max(0, (d - SENSOR_AT) * CM_PER_SQ));
 }
 function forcePressed() {
   if (S.forceClick && simNow - S.forceClick < 600) return true;
   const a = S.yaw * Math.PI / 180;
-  return hitsWall(S.c + Math.sin(a) * 0.46, S.r - Math.cos(a) * 0.46, 0.06);
+  return hitsWall(S.c + Math.sin(a) * SENSOR_AT, S.r - Math.cos(a) * SENSOR_AT, 0.10);
 }
 function yawAngle() { let d = S.yaw - S.yawRef; while (d > 180) d -= 360; while (d < -180) d += 360; return d; }
 
@@ -5063,23 +5083,27 @@ function drawField() {
   if (g) {
     const gx = g.c * u, gy = g.r * u, k = g.kind || 'star';
     if (k === 'home' || k === 'zone') {
+      /* snapped to the square that contains the goal, so the marker never
+         straddles a grid line even when the goal point is sensor-determined */
+      const bx = (Math.floor(g.c) + 0.5) * u, by = (Math.floor(g.r) + 0.5) * u;
       x.fillStyle = 'rgba(0,162,75,.13)'; x.strokeStyle = '#00A24B'; x.lineWidth = 2.5; x.setLineDash([7, 5]);
-      x.beginPath(); x.roundRect(gx - u * .55, gy - u * .55, u * 1.1, u * 1.1, 7); x.fill(); x.stroke(); x.setLineDash([]);
+      x.beginPath(); x.roundRect(bx - u * .43, by - u * .43, u * .86, u * .86, 6); x.fill(); x.stroke(); x.setLineDash([]);
     } else if (k === 'flag') {
       x.strokeStyle = '#7A8A99'; x.lineWidth = 2.5;
-      x.beginPath(); x.moveTo(gx, gy + u * .32); x.lineTo(gx, gy - u * .38); x.stroke();
+      x.beginPath(); x.moveTo(gx, gy + u * .30); x.lineTo(gx, gy - u * .34); x.stroke();
       x.fillStyle = '#E8443A';
-      x.beginPath(); x.moveTo(gx, gy - u * .38); x.lineTo(gx + u * .38, gy - u * .24); x.lineTo(gx, gy - u * .1); x.fill();
+      x.beginPath(); x.moveTo(gx, gy - u * .34); x.lineTo(gx + u * .32, gy - u * .22); x.lineTo(gx, gy - u * .10); x.fill();
     } else if (k === 'line') {
       x.strokeStyle = '#00A24B'; x.lineWidth = 3; x.setLineDash([6, 5]);
-      x.beginPath(); x.arc(gx, gy, u * .42, 0, 7); x.stroke(); x.setLineDash([]);
-    } else star(x, gx, gy, u * .32, true);
+      x.beginPath(); x.arc(gx, gy, u * .40, 0, 7); x.stroke(); x.setLineDash([]);
+    } else star(x, gx, gy, u * .30, true);
   }
   robot(x, u);
 }
 
 function star(x, cx, cy, r, glow) {
-  if (glow) { const g = x.createRadialGradient(cx, cy, 1, cx, cy, r * 2); g.addColorStop(0, 'rgba(255,205,0,.5)'); g.addColorStop(1, 'rgba(255,205,0,0)'); x.fillStyle = g; x.beginPath(); x.arc(cx, cy, r * 2, 0, 7); x.fill(); }
+  /* the glow is kept inside the square too */
+  if (glow) { const g = x.createRadialGradient(cx, cy, 1, cx, cy, r * 1.5); g.addColorStop(0, 'rgba(255,205,0,.5)'); g.addColorStop(1, 'rgba(255,205,0,0)'); x.fillStyle = g; x.beginPath(); x.arc(cx, cy, r * 1.5, 0, 7); x.fill(); }
   x.fillStyle = '#FFCD00'; x.strokeStyle = '#D9A400'; x.lineWidth = 1.5; x.beginPath();
   for (let i = 0; i < 5; i++) {
     const a = i * 1.2566 - 1.5708;
@@ -5106,16 +5130,20 @@ function robot(x, u) {
   }
 
   x.save(); x.translate(px, py); x.rotate(S.yaw * Math.PI / 180);
-  const w = u * .62, h = u * .78;
+  const w = u * BODY_W, h = u * BODY_H;
 
   x.fillStyle = 'rgba(22,34,46,.16)';
-  x.beginPath(); x.roundRect(-w / 2 + 2, -h / 2 + 3, w, h, 7); x.fill();
+  x.beginPath(); x.roundRect(-w / 2 + 2, -h / 2 + 3, w, h, 6); x.fill();
 
   x.fillStyle = '#1F2C3A';                                   // wheels C (left) and D (right)
-  [-1, 1].forEach(s => { x.beginPath(); x.roundRect(s * w / 2 - (s > 0 ? 0 : u * .13), -h * .3, u * .13, h * .5, 3); x.fill(); });
+  [-1, 1].forEach(s => {
+    x.beginPath();
+    x.roundRect(s * w / 2 - (s > 0 ? 0 : u * WHEEL_W), -h * .3, u * WHEEL_W, h * .56, 2);
+    x.fill();
+  });
 
   x.fillStyle = '#E9EDF2'; x.strokeStyle = '#B9C4D0'; x.lineWidth = 1.5;
-  x.beginPath(); x.roundRect(-w / 2, -h / 2, w, h, 7); x.fill(); x.stroke();
+  x.beginPath(); x.roundRect(-w / 2, -h / 2, w, h, 6); x.fill(); x.stroke();
 
   /* Hub face: the real 5x5 matrix, lit live by the running program. */
   const fw = w * 0.7, fh = h * 0.5, fx = -fw / 2, fy = -h * 0.18;
@@ -5136,19 +5164,22 @@ function robot(x, u) {
   x.beginPath(); x.arc(0, fy + fh + h * 0.09, u * 0.05, 0, 7); x.fill();
 
   x.fillStyle = '#2F86D6';                                    // distance sensor (B)
-  x.beginPath(); x.roundRect(-w * .3, -h / 2 + u * .04, w * .6, u * .1, 3); x.fill();
+  x.beginPath(); x.roundRect(-w * .3, -h / 2 + u * .03, w * .6, u * .08, 2); x.fill();
 
   const col = paintAt(sensorPos());                           // colour sensor (A) shows what it sees
-  x.fillStyle = PAINT_HEX[col] || '#fff'; x.strokeStyle = '#16222E'; x.lineWidth = 1.5;
-  x.beginPath(); x.arc(0, -h * .42, u * .075, 0, 7); x.fill(); x.stroke();
+  x.strokeStyle = '#9AA7B4'; x.lineWidth = Math.max(1, u * .02);
+  x.beginPath(); x.moveTo(0, -h / 2); x.lineTo(0, -u * .40); x.stroke();
+  x.fillStyle = PAINT_HEX[col] || '#fff'; x.strokeStyle = '#16222E'; x.lineWidth = 1.2;
+  x.beginPath(); x.arc(0, -u * .41, u * .05, 0, 7); x.fill(); x.stroke();
 
   /* attachment arm on motor E */
   const ar = (S.armAngle * Math.PI / 180);
-  x.save(); x.translate(w * .5, h * .12);
-  x.strokeStyle = '#4C97E8'; x.lineWidth = Math.max(3, u * .07); x.lineCap = 'round';
-  x.beginPath(); x.moveTo(0, 0); x.lineTo(Math.cos(ar) * u * .42, Math.sin(ar) * u * .42); x.stroke();
-  x.fillStyle = '#4C97E8'; x.beginPath(); x.arc(Math.cos(ar) * u * .42, Math.sin(ar) * u * .42, u * .07, 0, 7); x.fill();
-  x.fillStyle = '#2E6FB5'; x.beginPath(); x.arc(0, 0, u * .06, 0, 7); x.fill();
+  x.save(); x.translate(w * .42, h * .10);
+  x.strokeStyle = '#4C97E8'; x.lineWidth = Math.max(2.5, u * .055); x.lineCap = 'round';
+  x.beginPath(); x.moveTo(0, 0); x.lineTo(Math.cos(ar) * u * .17, Math.sin(ar) * u * .17); x.stroke();
+  x.fillStyle = '#4C97E8';
+  x.beginPath(); x.arc(Math.cos(ar) * u * .17, Math.sin(ar) * u * .17, u * .045, 0, 7); x.fill();
+  x.fillStyle = '#2E6FB5'; x.beginPath(); x.arc(0, 0, u * .05, 0, 7); x.fill();
   x.restore();
   x.restore();
 }
