@@ -50,6 +50,7 @@
   --c-myblock:#FF6680;
 
   --f-display:"Baloo 2","Noto Sans TC",system-ui,sans-serif;
+  --f-mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
   --f-ui:"Noto Sans TC","Baloo 2",system-ui,-apple-system,sans-serif;
 
   --r-sm:8px; --r-md:12px; --r-lg:18px; --r-pill:999px;
@@ -228,6 +229,68 @@ header{
 .task-zh{font-size:.94rem;font-weight:700;line-height:1.55;color:var(--ink)}
 .task-en{font-size:.79rem;font-weight:500;line-height:1.5;color:var(--ink-3);margin-top:4px}
 .editor{flex:1;min-height:0;display:flex;overflow:hidden}
+body.py-mode .editor{display:none}
+
+/* ---- Blocks / Python tabs ---- */
+.modes{
+  flex-shrink:0;display:flex;gap:4px;padding:7px 16px 0;
+  background:var(--surface-2);border-bottom:1px solid var(--line);
+}
+.mode{
+  padding:7px 18px;border-radius:10px 10px 0 0;margin-bottom:-1px;
+  font-weight:800;font-size:.82rem;color:var(--ink-3);
+  border:1px solid transparent;border-bottom-color:var(--line);
+  transition:background .14s,color .14s;
+}
+.mode:hover{color:var(--ink-2)}
+.mode.on{
+  background:var(--surface);color:var(--ink);
+  border-color:var(--line);border-bottom-color:var(--surface);
+  box-shadow:inset 0 3px 0 var(--accent);
+}
+
+/* ---- Python editor ---- */
+.pypane{display:none;flex:1;min-height:0;flex-direction:column;overflow:hidden;background:var(--surface)}
+body.py-mode .pypane{display:flex}
+.pywrap{flex:1;min-height:0;display:flex;overflow:hidden}
+.pylines{
+  flex-shrink:0;width:40px;margin:0;padding:10px 7px 10px 0;text-align:right;
+  font-family:var(--f-mono);font-size:13px;line-height:1.55;
+  color:var(--ink-3);background:var(--surface-2);
+  border-right:1px solid var(--line);overflow:hidden;white-space:pre;
+  font-variant-numeric:tabular-nums;
+}
+.pyedit{position:relative;flex:1;min-width:0}
+.pyhi,#pycode{
+  position:absolute;inset:0;margin:0;padding:10px 12px;
+  font-family:var(--f-mono);font-size:13px;line-height:1.55;
+  white-space:pre;border:0;tab-size:4;
+}
+.pyhi{pointer-events:none;overflow:hidden;color:var(--ink)}
+#pycode{
+  background:transparent;color:transparent;caret-color:var(--ink);
+  resize:none;outline:none;overflow:auto;width:100%;height:100%;
+}
+#pycode:focus{outline:none}
+.pyhi .k{color:#C0392B;font-weight:700}
+.pyhi .a{color:#2E6FB5;font-weight:700}
+.pyhi .n{color:#8A5A00;font-weight:600}
+.pyhi .s{color:#0B7A3E}
+.pyhi .c{color:var(--ink-3);font-style:italic}
+
+.pybar{
+  flex-shrink:0;display:flex;align-items:center;gap:10px;
+  padding:7px 12px;border-top:1px solid var(--line);background:var(--surface-2);
+}
+.pyhint{font-size:.72rem;color:var(--ink-3);font-weight:600}
+.pyconsole{
+  flex-shrink:0;height:132px;overflow:auto;
+  background:#16222E;color:#D7E0EA;
+  font-family:var(--f-mono);font-size:12px;line-height:1.6;padding:8px 12px;
+}
+.pyline{white-space:pre-wrap;word-break:break-word}
+.pyline.err{color:#FF8A80;font-weight:700}
+.pyline.warn{color:#FFD54F}
 #blockly{flex:1;min-width:0;height:100%}
 
 /* category rail — coloured dots that jump the always-open flyout to a section,
@@ -436,6 +499,10 @@ header{
 
 <section id="ws" aria-label="Workspace">
   <div class="pane-l">
+    <div class="modes" id="modes">
+      <button class="mode on" data-mode="blocks" id="mode-blocks"></button>
+      <button class="mode" data-mode="python" id="mode-python">Python</button>
+    </div>
     <div class="task">
       <div class="task-top">
         <div class="steps" id="steps"></div>
@@ -447,6 +514,22 @@ header{
     <div class="editor">
       <nav class="cat-rail" id="cat-rail" aria-label="Block categories"></nav>
       <div id="blockly"></div>
+    </div>
+
+    <div class="pypane" id="pypane">
+      <div class="pywrap">
+        <pre class="pylines" id="pylines"></pre>
+        <div class="pyedit">
+          <pre class="pyhi" id="pyhi" aria-hidden="true"></pre>
+          <textarea id="pycode" spellcheck="false" autocomplete="off"
+                    autocapitalize="off" autocorrect="off" aria-label="Python code"></textarea>
+        </div>
+      </div>
+      <div class="pybar">
+        <button class="btn" id="btn-pyreset"></button>
+        <span class="pyhint" id="pyhint"></span>
+      </div>
+      <div class="pyconsole" id="pyconsole" role="log" aria-live="polite"></div>
     </div>
   </div>
 
@@ -4275,6 +4358,71 @@ const CUR = [
       ]
     }
   ]
+},
+
+/* ═══════════════ UNIT 8 — the Python on-ramp, for kids who want more ═══════
+   Console-only lessons: no robot, so a child meets typing, indentation and
+   errors on their own before also having a robot to think about. Once these
+   are done, every earlier lesson can be switched to its Python tab. */
+{
+  id: 'u8', zh: 'Python 入門', en: 'Getting Started with Python', col: '#4C97E8', mins: 20, pyTrack: true,
+  lessons: [
+    {
+      id: 'first', zh: '第一行程式', en: 'Your First Lines',
+      dZh: '這一課沒有機器人，只有你和程式碼。打錯字沒關係——下面的黑色視窗會告訴你哪一行有問題。',
+      dEn: 'No robot in this lesson, just you and the code. Typos are fine — the black window below tells you which line to fix.',
+      steps: [
+        st('用 print( ) 印出一句話。試試看：print("Hello")',
+           'Use print( ) to show a message. Try: print("Hello")',
+           { pyOnly: true, py: '# 印出一句話 / print a message\n',
+             pyWin: out => out.some(l => l.trim().length > 0) }),
+        st('變數是一個有名字的盒子。把 age 設成 10，再用 f 字串印出 age = 10。',
+           'A variable is a named box. Set age to 10, then use an f-string to print: age = 10',
+           { pyOnly: true, py: 'age = \n', pyWin: out => out.some(l => /age\s*=\s*10/.test(l)) }),
+        st('電腦很會算數。印出 7 乘以 6 的答案。',
+           'Computers are good at sums. Print the answer to 7 times 6.',
+           { pyOnly: true, py: '# 用 * 代表乘 / * means multiply\n', pyWin: out => out.some(l => /\b42\b/.test(l)) })
+      ]
+    },
+    {
+      id: 'logic', zh: '判斷與迴圈', en: 'Decisions and Loops',
+      dZh: '縮排很重要！if、for、while 下面的程式都要往右縮四格，電腦才知道那是它們的內容。',
+      dEn: 'Indentation matters. Code belonging to an if, for or while must be indented four spaces so the computer knows it is inside.',
+      steps: [
+        st('score 已經設成 80。如果 score 大於或等於 60 就印出 pass，否則印出 fail。',
+           'score is already 80. If score is 60 or more print pass, otherwise print fail.',
+           { pyOnly: true, py: 'score = 80\n\nif score >= 60:\n    \n', pyWin: out => out.some(l => /pass/i.test(l)) && !out.some(l => /fail/i.test(l)) }),
+        st('用 for 和 range 印出 1、2、3、4、5，一行一個。',
+           'Use for and range to print 1, 2, 3, 4, 5 — one per line.',
+           { pyOnly: true, py: 'for i in range(1, 6):\n    \n',
+             pyWin: out => out.map(s => s.trim()).join(',') === '1,2,3,4,5' }),
+        st('用 while 從 10 倒數到 1。',
+           'Use a while loop to count down from 10 to 1.',
+           { pyOnly: true, py: 'n = 10\nwhile n > 0:\n    \n',
+             pyWin: out => { const a = out.map(s => s.trim()); return a.length === 10 && a[0] === '10' && a[9] === '1'; } })
+      ]
+    },
+    {
+      id: 'funcs', zh: '函式與 async', en: 'Functions and async',
+      dZh: '函式把一段程式包起來取一個名字。機器人的程式一定會用到 async def main( ) 和 runloop.run( )——這一課就是在為它做準備。',
+      dEn: 'A function wraps code and gives it a name. Every robot program uses async def main( ) and runloop.run( ) — this lesson gets you ready for it.',
+      steps: [
+        st('寫一個函式 greet(name)，印出 Hello, 加上名字和驚嘆號。然後呼叫 greet("Mia")。',
+           'Write a function greet(name) that prints Hello, then the name and an exclamation mark. Then call greet("Mia").',
+           { pyOnly: true, py: 'def greet(name):\n    \n\ngreet("Mia")\n',
+             pyWin: out => out.some(l => /Hello,?\s*Mia\s*!/i.test(l)) }),
+        st('寫一個函式 double(n)，回傳 n 的兩倍。印出 double(21)。',
+           'Write a function double(n) that returns n times two. Print double(21).',
+           { pyOnly: true, py: 'def double(n):\n    return \n\nprint(double(21))\n',
+             pyWin: out => out.some(l => /\b42\b/.test(l)) }),
+        st('這就是每個機器人程式的骨架。在 main 裡面等 1 秒（await runloop.sleep_ms(1000)），再印出 done。',
+           'This is the skeleton every robot program uses. Inside main, wait one second with await runloop.sleep_ms(1000), then print done.',
+           { pyOnly: true,
+             py: 'import runloop\n\nasync def main():\n    \n\nrunloop.run(main())\n',
+             pyWin: out => out.some(l => /done/i.test(l)) })
+      ]
+    }
+  ]
 }
 ];
 
@@ -4733,6 +4881,7 @@ async function one(b) {
 /* ---------------------------------------------------------------- run / stop */
 async function runProgram() {
   if (running) { stopProgram(); return; }
+  if (mode === 'python') return runPythonProgram();
   resetSim();
   const top = ws.getTopBlocks(false).find(b => b.type === 'ev_start');
   if (!top) { fb('bad', '你還沒有放「當程式啟動時」的黃色積木。', 'You need the yellow "when program starts" block.'); return; }
@@ -4773,7 +4922,8 @@ function finish(why) {
   S.drive = null; S.armCmd = null; drawField(); drawHub();
   if (sandbox) { fb('', ...U('sandboxRun')); return; }
 
-  const won = step.win ? step.win(S) : S.atGoal();
+  const won = (step.pyWin && mode === 'python') ? step.pyWin(pyOut, S)
+            : step.win ? step.win(S) : S.atGoal();
   if (won) {
     fb('ok', '✅ 任務完成！', '✅ Mission complete!');
     const key = unitId + '/' + lessonId + '/' + stepIdx;
@@ -4794,17 +4944,27 @@ function diagnose(why) {
   if (why === 'timeout') return ['⏱ 程式跑太久停不下來了。你的迴圈可能永遠不會結束。',
                                  '⏱ The program ran too long. Your loop may never end.'];
   if (S.moved < 0.05 && S.pair !== 'CD')
-    return ['🔌 輪子沒有轉。你的驅動馬達接在 C 和 D，程式裡設的卻不是。',
-            '🔌 The wheels never turned. Your drive motors are on C and D, but the program says otherwise.'];
-  if (S.moved < 0.05 && Object.keys(S.used).length === 0)
-    return ['🧩 沒有任何積木執行。記得把積木接在「當程式啟動時」下面。',
-            '🧩 No blocks ran. Snap them underneath "when program starts".'];
+    return mode === 'python'
+      ? ['🔌 輪子沒有轉。你的驅動馬達接在 C 和 D——檢查 motor_pair.pair( ) 裡的連接埠。',
+         '🔌 The wheels never turned. Your drive motors are on C and D — check the ports in motor_pair.pair( ).']
+      : ['🔌 輪子沒有轉。你的驅動馬達接在 C 和 D，程式裡設的卻不是。',
+         '🔌 The wheels never turned. Your drive motors are on C and D, but the program says otherwise.'];
 
-  const miss = (step.need || []).find(t => !S.used[t]);
-  if (miss) {
-    const c = CATS.find(x => x.blocks.includes(miss));
-    return ['🧱 你還沒有用到「' + (c ? c.zh : '') + '」類別裡需要的積木。',
-            '🧱 You have not used the block this task needs from the ' + (c ? c.en : '') + ' category.'];
+  if (mode === 'python') {
+    if (step.pyWin)
+      return ['🐍 程式跑完了，但印出來的結果還不對。看看上面的說明，再檢查一次黑色視窗裡的輸出。',
+              '🐍 It ran, but what it printed is not right yet. Re-read the task and check the output below.'];
+  } else {
+    /* these only make sense about blocks */
+    if (S.moved < 0.05 && Object.keys(S.used).length === 0)
+      return ['🧩 沒有任何積木執行。記得把積木接在「當程式啟動時」下面。',
+              '🧩 No blocks ran. Snap them underneath "when program starts".'];
+    const miss = (step.need || []).find(t => !S.used[t]);
+    if (miss) {
+      const c = CATS.find(x => x.blocks.includes(miss));
+      return ['🧱 你還沒有用到「' + (c ? c.zh : '') + '」類別裡需要的積木。',
+              '🧱 You have not used the block this task needs from the ' + (c ? c.en : '') + ' category.'];
+    }
   }
   if (step.items && S.gotItems < S.items.length)
     return ['⭐ 還有 ' + (S.items.length - S.gotItems) + ' 顆星星沒收集到。',
@@ -4828,6 +4988,9 @@ function diagnose(why) {
     return ['🎯 好接近！只差 ' + n + ' 格。把格數調一下再試。',
             '🎯 So close — off by ' + n + ' squares. Adjust the number and try again.'];
   }
+  if (mode === 'python' && S.moved < 0.05 && S.armRot < 0.05)
+    return ['🐍 機器人完全沒有動。每個 motor 或 motor_pair 的動作前面都要加 await 才會執行。',
+            '🐍 The robot never moved. Every motor or motor_pair action needs await in front of it to actually run.'];
   return ['🔁 還沒完成任務條件，再看一次上面的說明。',
           '🔁 The task conditions were not met. Read the instruction again.'];
 }
@@ -5037,7 +5200,8 @@ function blockEntry(t) {
    tree you expand and close. The coloured rail beside it jumps to a section. */
 let RAIL = [];            // [{id, zh, en, col, firstBlock}] for the current step
 function buildToolbox() {
-  const allow = step.blocks;
+  /* console-only Python steps have no block palette at all */
+  const allow = step.blocks || [];
   const all = allow === '*';
   const contents = [];
   let blockCount = 0;
@@ -5276,6 +5440,8 @@ function loadStep() {
   S = null;
   fitCanvas();
   resetSim();
+  if (step.pyOnly && mode !== 'python') setMode('python');
+  else if (mode === 'python') pyLoadForStep();
   fb('', ...(sandbox ? U('sandboxRun') : U('ready')));
 }
 
@@ -5384,6 +5550,9 @@ function staticUI() {
   setPairText($('btn-run'), U('run'));
   setPairText($('btn-reset'), U('reset'));
   $('btn-lang').textContent = lang === 'zh' ? 'English' : '中文';
+  $('mode-blocks').textContent = L1('積木', 'Blocks');
+  setPairText($('btn-pyreset'), [ '↺ 還原範例', '↺ Reset code' ]);
+  $('pyhint').textContent = L1('Tab 縮排 · 冒號後會自動縮排', 'Tab indents · auto-indent after a colon');
   const fb2 = $('btn-full');
   if (fb2) { const t = L1('全螢幕', 'Fullscreen'); fb2.title = t; fb2.setAttribute('aria-label', t); }
   $('btn-lang').setAttribute('aria-label', lang === 'zh' ? 'Switch to English' : '切換為中文');
@@ -5427,6 +5596,11 @@ function boot() {
   $('brand').onclick = () => { stopProgram(); renderHome(); };
   $('btn-home').onclick = () => { stopProgram(); renderHome(); };
   $('btn-lang').onclick = toggleLang;
+
+  /* Blocks / Python */
+  pyInitEditor();
+  [...$('modes').children].forEach(b => { b.onclick = () => setMode(b.dataset.mode); });
+  $('btn-pyreset').onclick = pyResetCode;
 
   /* Fullscreen, which matters most when the page is embedded in a small frame. */
   const fsBtn = $('btn-full');
@@ -5472,8 +5646,978 @@ function boot() {
   window.addEventListener('resize', () => { if (step) { fitCanvas(); drawField(); } });
 }
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-else boot();
+/* boot() is called at the very end of part 6, once every part has evaluated */
+/* ==========================================================================
+   Part 5 — a small Python interpreter
+   --------------------------------------------------------------------------
+   Covers the subset SPIKE's MicroPython lessons need: variables, arithmetic,
+   strings and f-strings, lists, if/elif/else, while, for/range, def, return,
+   break/continue, import, and async def / await / runloop.
+
+   It is deliberately NOT full Python. Anything outside the subset raises a
+   readable bilingual error rather than failing silently — a ten-year-old who
+   mistypes something should be told what to fix, on which line.
+   ========================================================================== */
+
+/* ------------------------------------------------------------------ errors */
+function PyErr(zh, en, line) {
+  return { pyError: true, zh, en, line: line || 0 };
+}
+const BREAK = { sig: 'break' }, CONTINUE = { sig: 'continue' };
+function ReturnSig(v) { this.value = v; }
+
+/* ------------------------------------------------------------------ tokenizer */
+const KEYWORDS = new Set(['if', 'elif', 'else', 'while', 'for', 'in', 'def', 'return', 'break',
+  'continue', 'pass', 'and', 'or', 'not', 'True', 'False', 'None', 'import', 'from',
+  'async', 'await', 'global']);
+const OPS = ['**', '//', '==', '!=', '<=', '>=', '+=', '-=', '*=', '/=',
+  '+', '-', '*', '/', '%', '<', '>', '=', '(', ')', '[', ']', ',', ':', '.'];
+
+function tokenize(src) {
+  const toks = [];
+  const lines = src.replace(/\r\n?/g, '\n').split('\n');
+  const indents = [0];
+  let depth = 0;
+
+  for (let ln = 0; ln < lines.length; ln++) {
+    const raw = lines[ln];
+    const lineNo = ln + 1;
+
+    if (depth === 0) {
+      const stripped = raw.replace(/#.*$/, '').trim();
+      if (!stripped) continue;                                  // blank / comment-only
+      const ind = raw.match(/^[ \t]*/)[0].replace(/\t/g, '    ').length;
+      if (ind > indents[indents.length - 1]) {
+        indents.push(ind); toks.push({ t: 'INDENT', line: lineNo });
+      } else while (ind < indents[indents.length - 1]) {
+        indents.pop(); toks.push({ t: 'DEDENT', line: lineNo });
+        if (ind > indents[indents.length - 1])
+          throw PyErr('這一行的縮排對不上前面的程式。', 'The indentation on this line does not line up with the code above.', lineNo);
+      }
+    }
+
+    let i = 0;
+    while (i < raw.length) {
+      const c = raw[i];
+      if (c === ' ' || c === '\t') { i++; continue; }
+      if (c === '#') break;
+
+      /* f-string or plain string */
+      if (c === 'f' && (raw[i + 1] === '"' || raw[i + 1] === "'")) {
+        const q = raw[i + 1]; let j = i + 2, s = '';
+        while (j < raw.length && raw[j] !== q) { if (raw[j] === '\\') { s += raw[j + 1]; j += 2; } else s += raw[j++]; }
+        if (raw[j] !== q) throw PyErr('字串少了結尾的引號。', 'This string is missing its closing quote.', lineNo);
+        toks.push({ t: 'FSTRING', v: s, line: lineNo }); i = j + 1; continue;
+      }
+      if (c === '"' || c === "'") {
+        let j = i + 1, s = '';
+        while (j < raw.length && raw[j] !== c) { if (raw[j] === '\\') { s += raw[j + 1] === 'n' ? '\n' : raw[j + 1]; j += 2; } else s += raw[j++]; }
+        if (raw[j] !== c) throw PyErr('字串少了結尾的引號。', 'This string is missing its closing quote.', lineNo);
+        toks.push({ t: 'STR', v: s, line: lineNo }); i = j + 1; continue;
+      }
+      if (/[0-9]/.test(c) || (c === '.' && /[0-9]/.test(raw[i + 1] || ''))) {
+        let j = i; while (j < raw.length && /[0-9._]/.test(raw[j])) j++;
+        toks.push({ t: 'NUM', v: parseFloat(raw.slice(i, j).replace(/_/g, '')), line: lineNo }); i = j; continue;
+      }
+      if (/[A-Za-z_]/.test(c)) {
+        let j = i; while (j < raw.length && /[A-Za-z0-9_]/.test(raw[j])) j++;
+        const w = raw.slice(i, j);
+        toks.push({ t: KEYWORDS.has(w) ? w : 'NAME', v: w, line: lineNo }); i = j; continue;
+      }
+      const op = OPS.find(o => raw.startsWith(o, i));
+      if (!op) throw PyErr('看不懂這個符號：' + c, 'Unexpected character: ' + c, lineNo);
+      if (op === '(' || op === '[') depth++;
+      if (op === ')' || op === ']') depth = Math.max(0, depth - 1);
+      toks.push({ t: op, line: lineNo }); i += op.length;
+    }
+    if (depth === 0) toks.push({ t: 'NEWLINE', line: lineNo });
+  }
+  while (indents.length > 1) { indents.pop(); toks.push({ t: 'DEDENT', line: lines.length }); }
+  toks.push({ t: 'EOF', line: lines.length });
+  return toks;
+}
+
+/* ------------------------------------------------------------------ parser */
+function parse(src) {
+  const toks = tokenize(src);
+  let p = 0;
+  const peek = (k) => toks[p + (k || 0)];
+  const at = (t) => toks[p].t === t;
+  const line = () => toks[p].line;
+  function eat(t, zh, en) {
+    if (toks[p].t !== t) throw PyErr(zh || ('這裡應該要有 ' + t), en || ('Expected ' + t + ' here'), toks[p].line);
+    return toks[p++];
+  }
+  const opt = (t) => (toks[p].t === t ? (p++, true) : false);
+
+  function block() {
+    eat(':', '這一行結尾少了冒號「:」。', 'This line needs a colon ":" at the end.');
+    eat('NEWLINE', '冒號後面要換行。', 'Start a new line after the colon.');
+    eat('INDENT', '下一行要往右縮排。', 'The next line needs to be indented.');
+    const body = [];
+    while (!at('DEDENT') && !at('EOF')) body.push(statement());
+    opt('DEDENT');
+    return body;
+  }
+
+  function statement() {
+    const ln = line();
+    if (at('if')) {
+      p++; const test = expr(); const body = block();
+      let orelse = [];
+      if (at('elif')) { orelse = [statement_elif()]; }
+      else if (at('else')) { p++; orelse = block(); }
+      return { k: 'if', test, body, orelse, ln };
+    }
+    if (at('while')) { p++; const test = expr(); return { k: 'while', test, body: block(), ln }; }
+    if (at('for')) {
+      p++; const name = eat('NAME', '「for」後面要接一個變數名稱。', 'A variable name must follow "for".').v;
+      eat('in', '「for」要寫成 for x in ...', 'A "for" loop is written: for x in ...');
+      const iter = expr();
+      return { k: 'for', name, iter, body: block(), ln };
+    }
+    if (at('def') || (at('async') && peek(1).t === 'def')) {
+      const isAsync = opt('async'); eat('def');
+      const name = eat('NAME', '「def」後面要接函式名稱。', 'A function name must follow "def".').v;
+      eat('(', '函式名稱後面要有括號。', 'Function name must be followed by parentheses.');
+      const params = [];
+      while (!at(')')) { params.push(eat('NAME').v); if (!opt(',')) break; }
+      eat(')');
+      return { k: 'def', name, params, body: block(), isAsync, ln };
+    }
+    if (at('return')) { p++; const v = at('NEWLINE') ? null : expr(); eat('NEWLINE'); return { k: 'return', value: v, ln }; }
+    if (at('break')) { p++; eat('NEWLINE'); return { k: 'break', ln }; }
+    if (at('continue')) { p++; eat('NEWLINE'); return { k: 'continue', ln }; }
+    if (at('pass')) { p++; eat('NEWLINE'); return { k: 'pass', ln }; }
+    if (at('global')) { p++; const names = [eat('NAME').v]; while (opt(',')) names.push(eat('NAME').v); eat('NEWLINE'); return { k: 'global', names, ln }; }
+    if (at('import')) {
+      p++; const mods = [];
+      do { let n = eat('NAME').v; while (opt('.')) n += '.' + eat('NAME').v; mods.push(n); } while (opt(','));
+      eat('NEWLINE'); return { k: 'import', mods, ln };
+    }
+    if (at('from')) {
+      p++; let mod = eat('NAME').v; while (opt('.')) mod += '.' + eat('NAME').v;
+      eat('import', '應該是 from ... import ...', 'This should read: from ... import ...');
+      const names = [eat('NAME').v]; while (opt(',')) names.push(eat('NAME').v);
+      eat('NEWLINE'); return { k: 'from', mod, names, ln };
+    }
+
+    /* assignment or bare expression */
+    const target = expr();
+    if (at('=')) {
+      p++; const value = expr(); eat('NEWLINE');
+      return { k: 'assign', target, value, ln };
+    }
+    for (const aug of ['+=', '-=', '*=', '/=']) {
+      if (at(aug)) { p++; const value = expr(); eat('NEWLINE'); return { k: 'aug', op: aug[0], target, value, ln }; }
+    }
+    eat('NEWLINE', '這一行後面多了看不懂的東西。', 'There is something unexpected at the end of this line.');
+    return { k: 'expr', value: target, ln };
+  }
+  function statement_elif() {
+    const ln = line(); eat('elif'); const test = expr(); const body = block();
+    let orelse = [];
+    if (at('elif')) orelse = [statement_elif()];
+    else if (at('else')) { p++; orelse = block(); }
+    return { k: 'if', test, body, orelse, ln };
+  }
+
+  /* --- expressions, lowest precedence first --- */
+  function expr() { return orTest(); }
+  function orTest() { let l = andTest(); while (at('or')) { p++; l = { k: 'bool', op: 'or', l, r: andTest() }; } return l; }
+  function andTest() { let l = notTest(); while (at('and')) { p++; l = { k: 'bool', op: 'and', l, r: notTest() }; } return l; }
+  function notTest() { if (at('not')) { p++; return { k: 'not', v: notTest() }; } return comparison(); }
+  function comparison() {
+    let l = arith();
+    while (['==', '!=', '<', '>', '<=', '>='].some(o => at(o)) || at('in')) {
+      const ln = line(); const op = toks[p++].t; l = { k: 'cmp', op, l, r: arith(), ln };
+    }
+    return l;
+  }
+  function arith() { let l = term(); while (at('+') || at('-')) { const ln = line(); const op = toks[p++].t; l = { k: 'bin', op, l, r: term(), ln }; } return l; }
+  function term() { let l = factor(); while (at('*') || at('/') || at('//') || at('%')) { const ln = line(); const op = toks[p++].t; l = { k: 'bin', op, l, r: factor(), ln }; } return l; }
+  function factor() { if (at('-') || at('+')) { const op = toks[p++].t; return { k: 'unary', op, v: factor() }; } return power(); }
+  function power() { const b = atomExpr(); if (at('**')) { const ln = line(); p++; return { k: 'bin', op: '**', l: b, r: factor(), ln }; } return b; }
+
+  function atomExpr() {
+    if (at('await')) { const ln = line(); p++; return { k: 'await', v: atomExpr(), ln }; }
+    let node = atom();
+    for (;;) {
+      if (at('(')) {
+        const ln = line(); p++; const args = []; const kwargs = {};
+        while (!at(')')) {
+          if (at('NAME') && peek(1).t === '=') { const kw = toks[p++].v; p++; kwargs[kw] = expr(); }
+          else args.push(expr());
+          if (!opt(',')) break;
+        }
+        eat(')', '括號沒有關起來。', 'This bracket is never closed.');
+        node = { k: 'call', fn: node, args, kwargs, ln };
+      } else if (at('[')) {
+        p++; const idx = expr(); eat(']'); node = { k: 'index', obj: node, idx };
+      } else if (at('.')) {
+        p++; const name = eat('NAME', '點後面要接名稱。', 'A name must follow the dot.').v;
+        node = { k: 'attr', obj: node, name };
+      } else break;
+    }
+    return node;
+  }
+
+  function atom() {
+    const tk = toks[p], ln = tk.line;
+    if (tk.t === 'NUM') { p++; return { k: 'num', v: tk.v }; }
+    if (tk.t === 'STR') { p++; return { k: 'str', v: tk.v }; }
+    if (tk.t === 'FSTRING') { p++; return { k: 'fstr', parts: parseFString(tk.v, ln) }; }
+    if (tk.t === 'True') { p++; return { k: 'const', v: true }; }
+    if (tk.t === 'False') { p++; return { k: 'const', v: false }; }
+    if (tk.t === 'None') { p++; return { k: 'const', v: null }; }
+    if (tk.t === 'NAME') { p++; return { k: 'name', v: tk.v, ln }; }
+    if (tk.t === '(') { p++; const e = expr(); eat(')'); return e; }
+    if (tk.t === '[') {
+      p++; const items = [];
+      while (!at(']')) { items.push(expr()); if (!opt(',')) break; }
+      eat(']'); return { k: 'list', items };
+    }
+    throw PyErr('這裡少了東西，或是打錯字了。', 'Something is missing or mistyped here.', ln);
+  }
+
+  /* f-string: split literal text from {expression} holes */
+  function parseFString(s, ln) {
+    const parts = []; let buf = '';
+    for (let i = 0; i < s.length; i++) {
+      if (s[i] === '{') {
+        if (s[i + 1] === '{') { buf += '{'; i++; continue; }
+        if (buf) { parts.push({ lit: buf }); buf = ''; }
+        let d = 1, j = i + 1, inner = '';
+        while (j < s.length && d > 0) {
+          if (s[j] === '{') d++;
+          else if (s[j] === '}') { d--; if (!d) break; }
+          inner += s[j++];
+        }
+        if (d) throw PyErr('f 字串裡的大括號沒有關起來。', 'A { in this f-string is never closed.', ln);
+        parts.push({ expr: parse(inner + '\n').body[0].value });
+        i = j;
+      } else buf += s[i];
+    }
+    if (buf) parts.push({ lit: buf });
+    return parts;
+  }
+
+  const body = [];
+  while (!at('EOF')) {
+    if (at('NEWLINE') || at('INDENT') || at('DEDENT')) { p++; continue; }
+    body.push(statement());
+  }
+  return { body };
+}
+
+/* ------------------------------------------------------------------ values */
+function pyTruthy(v) {
+  if (v === null || v === undefined || v === false) return false;
+  if (v === true) return true;
+  if (typeof v === 'number') return v !== 0;
+  if (typeof v === 'string') return v.length > 0;
+  if (Array.isArray(v)) return v.length > 0;
+  return true;
+}
+function pyRepr(v) {
+  if (v === null || v === undefined) return 'None';
+  if (v === true) return 'True';
+  if (v === false) return 'False';
+  if (Array.isArray(v)) return '[' + v.map(pyRepr).join(', ') + ']';
+  if (typeof v === 'number') return Number.isInteger(v) ? String(v) : String(parseFloat(v.toFixed(6)));
+  if (typeof v === 'object' && v.__coro) return '<coroutine>';
+  if (typeof v === 'object' && v.__module) return '<module ' + v.__module + '>';
+  if (typeof v === 'function' || (v && v.__pyfunc)) return '<function>';
+  return String(v);
+}
+function pyStr(v) { return typeof v === 'string' ? v : pyRepr(v); }
+
+/* ------------------------------------------------------------------ scope */
+function Scope(parent) { this.vars = new Map(); this.parent = parent || null; this.globals = new Set(); }
+Scope.prototype.get = function (n) {
+  let s = this; while (s) { if (s.vars.has(n)) return s.vars.get(n); s = s.parent; }
+  return undefined;
+};
+Scope.prototype.has = function (n) { let s = this; while (s) { if (s.vars.has(n)) return true; s = s.parent; } return false; };
+Scope.prototype.set = function (n, v) { this.vars.set(n, v); };
+Scope.prototype.setGlobal = function (n, v) { let s = this; while (s.parent) s = s.parent; s.vars.set(n, v); };
+
+/* ------------------------------------------------------------------ runner */
+/**
+ * runPython(src, opts)
+ *   opts.globals   – object of names available without import
+ *   opts.modules   – { name: moduleObject } importable
+ *   opts.print     – fn(text) for print output
+ *   opts.onStep    – async fn() called between statements (lets the sim breathe
+ *                    and lets a Stop button interrupt a running program)
+ *   opts.opLimit   – guard against runaway loops
+ */
+async function runPython(src, opts) {
+  const o = opts || {};
+  const printFn = o.print || (() => {});
+  const onStep = o.onStep || (async () => {});
+  const opLimit = o.opLimit || 400000;
+  let ops = 0;
+  const coros = [];                      // created coroutines, to catch a missing await
+
+  const tick = async (ln) => {
+    if (++ops > opLimit)
+      throw PyErr('程式跑太久停不下來了，可能有一個永遠不會結束的迴圈。',
+                  'This ran far too long — you may have a loop that never ends.', ln);
+    if ((ops & 63) === 0) await onStep();
+  };
+
+  const G = new Scope(null);
+  const BUILTINS = {
+    print: { __native: true, name: 'print', fn: (...a) => { printFn(a.map(pyStr).join(' ')); return null; } },
+    len: { __native: true, name: 'len', fn: (x) => (Array.isArray(x) || typeof x === 'string') ? x.length : 0 },
+    range: { __native: true, name: 'range', fn: (a, b, c) => {
+      let start = 0, stop = a, step = 1;
+      if (b !== undefined) { start = a; stop = b; }
+      if (c !== undefined) step = c;
+      const out = [];
+      if (step === 0) return out;
+      for (let i = start; step > 0 ? i < stop : i > stop; i += step) out.push(i);
+      return out;
+    } },
+    abs: { __native: true, name: 'abs', fn: Math.abs },
+    int: { __native: true, name: 'int', fn: (x) => Math.trunc(typeof x === 'string' ? parseFloat(x) : x) || 0 },
+    float: { __native: true, name: 'float', fn: (x) => (typeof x === 'string' ? parseFloat(x) : x) || 0 },
+    str: { __native: true, name: 'str', fn: pyStr },
+    round: { __native: true, name: 'round', fn: (x, d) => { const m = Math.pow(10, d || 0); return Math.round(x * m) / m; } },
+    min: { __native: true, name: 'min', fn: (...a) => Math.min(...(a.length === 1 && Array.isArray(a[0]) ? a[0] : a)) },
+    max: { __native: true, name: 'max', fn: (...a) => Math.max(...(a.length === 1 && Array.isArray(a[0]) ? a[0] : a)) },
+    sum: { __native: true, name: 'sum', fn: (a) => (a || []).reduce((x, y) => x + y, 0) }
+  };
+  Object.keys(BUILTINS).forEach(k => G.set(k, BUILTINS[k]));
+  Object.keys(o.globals || {}).forEach(k => G.set(k, o.globals[k]));
+
+  /* ---- calling ---- */
+  async function callValue(f, args, kwargs, ln) {
+    if (f && f.__native) {
+      const r = f.fn.apply(null, args.concat(kwargs && Object.keys(kwargs).length ? [kwargs] : []));
+      if (r && r.__coro) { coros.push(r); }
+      return r instanceof Promise ? await r : r;
+    }
+    if (f && f.__pyfunc) {
+      if (f.isAsync) {
+        const coro = { __coro: true, awaited: false, name: f.name, run: () => invoke(f, args, ln) };
+        coros.push(coro);
+        return coro;
+      }
+      return await invoke(f, args, ln);
+    }
+    throw PyErr('這個東西不能當作函式來呼叫。', 'This is not something you can call like a function.', ln);
+  }
+  async function invoke(f, args, ln) {
+    if (args.length !== f.params.length)
+      throw PyErr('函式「' + f.name + '」需要 ' + f.params.length + ' 個參數，但你給了 ' + args.length + ' 個。',
+                  'Function "' + f.name + '" takes ' + f.params.length + ' argument(s), but got ' + args.length + '.', ln);
+    const s = new Scope(f.scope);
+    f.params.forEach((pn, i) => s.set(pn, args[i]));
+    try { await execBlock(f.body, s); }
+    catch (e) { if (e instanceof ReturnSig) return e.value; throw e; }
+    return null;
+  }
+
+  if (o.bindCall) o.bindCall(async (f, args) => await callValue(f, args, {}, 0));
+
+  /* ---- expressions ---- */
+  async function ev(n, sc) {
+    switch (n.k) {
+      case 'num': case 'str': return n.v;
+      case 'const': return n.v;
+      case 'fstr': {
+        let out = '';
+        for (const part of n.parts) out += part.lit !== undefined ? part.lit : pyStr(await ev(part.expr, sc));
+        return out;
+      }
+      case 'list': { const a = []; for (const it of n.items) a.push(await ev(it, sc)); return a; }
+      case 'name': {
+        if (!sc.has(n.v))
+          throw PyErr('還沒有一個叫做「' + n.v + '」的東西。是不是打錯字，或忘了先 import？',
+                      'Nothing called "' + n.v + '" exists yet. Check the spelling, or whether you forgot to import it.', n.ln);
+        return sc.get(n.v);
+      }
+      case 'attr': {
+        const obj = await ev(n.obj, sc);
+        if (obj && typeof obj === 'object' && n.name in obj) return obj[n.name];
+        if (Array.isArray(obj) && n.name === 'append')
+          return { __native: true, name: 'append', fn: (v) => { obj.push(v); return null; } };
+        throw PyErr('「' + n.name + '」不存在於這個東西裡面。', '"' + n.name + '" does not exist on that.', n.obj.ln || 0);
+      }
+      case 'index': {
+        const obj = await ev(n.obj, sc); let i = await ev(n.idx, sc);
+        if (!Array.isArray(obj) && typeof obj !== 'string') throw PyErr('這個東西不能用 [ ] 取值。', 'You cannot index into that with [ ].', 0);
+        if (i < 0) i += obj.length;
+        if (i < 0 || i >= obj.length) throw PyErr('索引 ' + i + ' 超出範圍（長度是 ' + obj.length + '）。', 'Index ' + i + ' is out of range (length is ' + obj.length + ').', 0);
+        return obj[i];
+      }
+      case 'unary': { const v = await ev(n.v, sc); return n.op === '-' ? -v : +v; }
+      case 'not': return !pyTruthy(await ev(n.v, sc));
+      case 'bool': {
+        const l = await ev(n.l, sc);
+        if (n.op === 'and') return pyTruthy(l) ? await ev(n.r, sc) : l;
+        return pyTruthy(l) ? l : await ev(n.r, sc);
+      }
+      case 'cmp': {
+        const l = await ev(n.l, sc), r = await ev(n.r, sc);
+        switch (n.op) {
+          case '==': return l === r; case '!=': return l !== r;
+          case '<': return l < r; case '>': return l > r;
+          case '<=': return l <= r; case '>=': return l >= r;
+          case 'in': return Array.isArray(r) ? r.includes(l) : String(r).includes(String(l));
+        }
+        return false;
+      }
+      case 'bin': {
+        const l = await ev(n.l, sc), r = await ev(n.r, sc);
+        if (n.op === '+') {
+          if (typeof l === 'string' || typeof r === 'string') {
+            if (typeof l !== typeof r)
+              throw PyErr('不能把文字和數字用 + 相加。要先用 str( ) 把數字變成文字。',
+                          'You cannot add text and a number with +. Wrap the number in str( ) first.', n.ln || n.l.ln || 0);
+            return l + r;
+          }
+          if (Array.isArray(l) && Array.isArray(r)) return l.concat(r);
+        }
+        switch (n.op) {
+          case '+': return l + r; case '-': return l - r; case '*': return l * r;
+          case '/': if (r === 0) throw PyErr('不能除以 0。', 'You cannot divide by zero.', n.ln || n.l.ln || 0); return l / r;
+          case '//': if (r === 0) throw PyErr('不能除以 0。', 'You cannot divide by zero.', n.ln || n.l.ln || 0); return Math.floor(l / r);
+          case '%': return ((l % r) + r) % r;
+          case '**': return Math.pow(l, r);
+        }
+        return null;
+      }
+      case 'call': {
+        const f = await ev(n.fn, sc);
+        const args = []; for (const a of n.args) args.push(await ev(a, sc));
+        const kw = {}; for (const k in n.kwargs) kw[k] = await ev(n.kwargs[k], sc);
+        return await callValue(f, args, kw, n.ln);
+      }
+      case 'await': {
+        const v = await ev(n.v, sc);
+        if (v && v.__coro) { v.awaited = true; return await v.run(); }
+        if (v instanceof Promise) return await v;
+        return v;                                   // awaiting a plain value is harmless
+      }
+    }
+    throw PyErr('看不懂這段程式。', 'This part of the program could not be understood.', 0);
+  }
+
+  /* ---- statements ---- */
+  async function execBlock(stmts, sc) {
+    for (const s of stmts) await exec(s, sc);
+  }
+  async function exec(n, sc) {
+    await tick(n.ln);
+    switch (n.k) {
+      case 'expr': await ev(n.value, sc); return;
+      case 'pass': return;
+      case 'assign': {
+        const v = await ev(n.value, sc);
+        if (n.target.k === 'name') {
+          if (sc.globals.has(n.target.v)) sc.setGlobal(n.target.v, v); else sc.set(n.target.v, v);
+          return;
+        }
+        if (n.target.k === 'index') {
+          const obj = await ev(n.target.obj, sc); let i = await ev(n.target.idx, sc);
+          if (i < 0) i += obj.length; obj[i] = v; return;
+        }
+        throw PyErr('等號左邊不能放這個東西。', 'You cannot assign to that.', n.ln);
+      }
+      case 'aug': {
+        const cur = await ev(n.target, sc), add = await ev(n.value, sc);
+        let v;
+        switch (n.op) { case '+': v = (typeof cur === 'string' ? cur + pyStr(add) : cur + add); break;
+          case '-': v = cur - add; break; case '*': v = cur * add; break; case '/': v = cur / add; break; }
+        if (n.target.k === 'name') {
+          if (sc.globals.has(n.target.v)) sc.setGlobal(n.target.v, v); else sc.set(n.target.v, v);
+        } else if (n.target.k === 'index') {
+          const obj = await ev(n.target.obj, sc); let i = await ev(n.target.idx, sc);
+          if (i < 0) i += obj.length; obj[i] = v;
+        }
+        return;
+      }
+      case 'if':
+        if (pyTruthy(await ev(n.test, sc))) await execBlock(n.body, sc);
+        else await execBlock(n.orelse, sc);
+        return;
+      case 'while':
+        for (;;) {
+          await tick(n.ln);
+          if (!pyTruthy(await ev(n.test, sc))) break;
+          try { await execBlock(n.body, sc); }
+          catch (e) { if (e === BREAK) break; if (e !== CONTINUE) throw e; }
+        }
+        return;
+      case 'for': {
+        const it = await ev(n.iter, sc);
+        if (!Array.isArray(it) && typeof it !== 'string')
+          throw PyErr('「for ... in」後面要放一個清單或 range( )。', 'A "for ... in" loop needs a list or range( ).', n.ln);
+        for (const item of it) {
+          await tick(n.ln);
+          sc.set(n.name, item);
+          try { await execBlock(n.body, sc); }
+          catch (e) { if (e === BREAK) break; if (e !== CONTINUE) throw e; }
+        }
+        return;
+      }
+      case 'def':
+        sc.set(n.name, { __pyfunc: true, name: n.name, params: n.params, body: n.body, scope: sc, isAsync: n.isAsync });
+        return;
+      case 'return': throw new ReturnSig(n.value ? await ev(n.value, sc) : null);
+      case 'break': throw BREAK;
+      case 'continue': throw CONTINUE;
+      case 'global': n.names.forEach(nm => sc.globals.add(nm)); return;
+      case 'import':
+        for (const m of n.mods) {
+          const mod = (o.modules || {})[m];
+          if (!mod) throw PyErr('沒有叫做「' + m + '」的模組可以匯入。', 'There is no module called "' + m + '" to import.', n.ln);
+          sc.set(m.split('.')[0], mod);
+        }
+        return;
+      case 'from': {
+        const mod = (o.modules || {})[n.mod];
+        if (!mod) throw PyErr('沒有叫做「' + n.mod + '」的模組可以匯入。', 'There is no module called "' + n.mod + '" to import.', n.ln);
+        for (const nm of n.names) {
+          if (!(nm in mod)) throw PyErr('「' + n.mod + '」裡面沒有「' + nm + '」。', '"' + n.mod + '" has no "' + nm + '" in it.', n.ln);
+          sc.set(nm, mod[nm]);
+        }
+        return;
+      }
+    }
+    throw PyErr('看不懂這一行。', 'This line could not be understood.', n.ln);
+  }
+
+  /* ---- go ---- */
+  const tree = parse(src);
+  try {
+    await execBlock(tree.body, G);
+  } catch (e) {
+    if (e instanceof ReturnSig) { /* top-level return: ignore */ }
+    else if (e === BREAK || e === CONTINUE)
+      throw PyErr('「break」和「continue」只能寫在迴圈裡面。', '"break" and "continue" only work inside a loop.', 0);
+    else throw e;
+  }
+  const forgotten = coros.filter(c => !c.awaited);
+  return { forgotten: forgotten.map(c => c.name || 'a function') };
+}
+
+if (typeof module !== 'undefined' && module.exports) module.exports = { runPython, parse, tokenize, pyRepr, pyStr, pyTruthy };
+/* ==========================================================================
+   Part 6 — SPIKE App 3 Python bound to the simulator, plus the editor UI
+   --------------------------------------------------------------------------
+   The API here mirrors the real SPIKE App 3 MicroPython modules exactly,
+   including the details that are easy to get wrong:
+     · distance_sensor.distance() returns MILLIMETRES, -1 when nothing is seen
+     · motion_sensor.tilt_angles() returns DECIDEGREES, clockwise negative
+     · motor.run_for_degrees(port, degrees, velocity) — velocity is required
+     · velocities are degrees per second, not a percentage
+   Code written here is the same code that runs on the real hub.
+   ========================================================================== */
+
+/* velocity (deg/sec) → the simulator's 0-100 speed. The drive base tops out at
+   2.5 rotations/sec = 900 deg/sec; the attachment motor at 1.6 = 576. */
+const velToDrive = v => Math.max(1, Math.min(100, Math.round(Math.abs(v == null ? 360 : v) / 9)));
+const velToArm   = v => Math.max(1, Math.min(100, Math.round(Math.abs(v == null ? 360 : v) / 5.76)));
+
+const COLOR_ENUM = { BLACK: 0, MAGENTA: 1, PURPLE: 2, BLUE: 3, AZURE: 4, TURQUOISE: 5,
+                     GREEN: 6, YELLOW: 7, ORANGE: 8, RED: 9, WHITE: 10, UNKNOWN: -1 };
+const PAINT_TO_ENUM = { RED: 9, BLUE: 3, GREEN: 6, YELLOW: 7, BLACK: 0, WHITE: 10 };
+
+const LED_IMAGES = {
+  IMAGE_HEART:     '01010' + '11111' + '11111' + '01110' + '00100',
+  IMAGE_HAPPY:     '01010' + '01010' + '00000' + '10001' + '01110',
+  IMAGE_SAD:       '01010' + '01010' + '00000' + '01110' + '10001',
+  IMAGE_ARROW_N:   '00100' + '01110' + '10101' + '00100' + '00100',
+  IMAGE_YES:       '00001' + '00010' + '10100' + '01000' + '00000',
+  IMAGE_NO:        '10001' + '01010' + '00100' + '01010' + '10001',
+  IMAGE_SQUARE:    '11111' + '10001' + '10001' + '10001' + '11111'
+};
+
+let pyCallPython = null;      // late-bound: lets native code invoke a Python callable
+
+/** Builds the module table handed to the interpreter, wired to the live sim. */
+function spikeModules() {
+  const LETTER = ['A', 'B', 'C', 'D', 'E', 'F'];
+  const P = n => LETTER[n] || 'A';
+
+  /* awaitable native: returns a coroutine the interpreter runs on `await` */
+  const aw = (name, fn) => ({ __native: true, name,
+    fn: (...a) => ({ __coro: true, awaited: false, name, run: () => fn.apply(null, a) }) });
+  const sy = (name, fn) => ({ __native: true, name, fn });
+  const frame = () => new Promise(r => nextFrame(r));
+
+  /* ---- movement (the C+D pair) ---- */
+  async function driveFor(degrees, steering, kw) {
+    if (S.pair !== 'CD') { await sleep(200); return 0; }      // wrong ports: wheels never spin
+    S.speed = velToDrive(kw && kw.velocity);
+    const rot = Math.abs(degrees) / 360;
+    S.drive = { sign: degrees < 0 ? -1 : 1, steer: steering || 0, done: 0, target: rot, finished: false };
+    const d = S.drive;
+    await until(() => d.finished || S.crashed || S.offField);
+    return 0;
+  }
+  async function driveForTime(ms, steering, kw) {
+    if (S.pair !== 'CD') { await sleep(Math.min(ms, 200)); return 0; }
+    S.speed = velToDrive(kw && kw.velocity);
+    S.drive = { sign: 1, steer: steering || 0, done: 0, target: null, finished: false };
+    const t0 = simNow;
+    await until(() => simNow - t0 >= ms || S.crashed || S.offField);
+    S.drive = null;
+    return 0;
+  }
+
+  /* ---- the attachment motor ---- */
+  async function motorFor(portNum, degrees, velocity, kw) {
+    if (P(portNum) !== ROBOT.arm) { await sleep(120); return 0; }
+    S.armSpeed = velToArm(velocity);
+    S.armDir = degrees < 0 ? 'CCW' : 'CW';
+    S.armCmd = { dir: S.armDir, speed: S.armSpeed, done: 0, target: Math.abs(degrees) / 360, finished: false };
+    const m = S.armCmd;
+    await until(() => m.finished);
+    return 0;
+  }
+
+  const light_matrix = {
+    write: aw('write', async (text) => {
+      const t = String(text == null ? '' : text);
+      S.wrote = true;
+      for (const ch of t.slice(0, 6)) { S.matrix = glyph(ch); S.matrixCount++; drawHub(); drawField(); await sleep(420); }
+      S.matrix = new Array(25).fill(false); drawHub(); drawField();
+      return 0;
+    }),
+    show_image: sy('show_image', (img) => {
+      const bits = typeof img === 'string' ? img : LED_IMAGES.IMAGE_HAPPY;
+      S.matrix = bits.split('').map(c => c === '1'); S.matrixCount++;
+      drawHub(); drawField(); return null;
+    }),
+    show: sy('show', (pixels) => {
+      if (Array.isArray(pixels)) { S.matrix = pixels.slice(0, 25).map(v => +v > 0); S.matrixCount++; drawHub(); drawField(); }
+      return null;
+    }),
+    set_pixel: sy('set_pixel', (x, y, intensity) => {
+      const xi = Math.max(0, Math.min(4, x | 0)), yi = Math.max(0, Math.min(4, y | 0));
+      S.matrix[yi * 5 + xi] = (intensity == null ? 100 : intensity) > 0;
+      S.matrixCount++; drawHub(); drawField(); return null;
+    }),
+    get_pixel: sy('get_pixel', (x, y) => (S.matrix[(y | 0) * 5 + (x | 0)] ? 100 : 0)),
+    clear: sy('clear', () => { S.matrix = new Array(25).fill(false); drawHub(); drawField(); return null; })
+  };
+  Object.keys(LED_IMAGES).forEach(k => { light_matrix[k] = LED_IMAGES[k]; });
+
+  const motion_sensor = {
+    /* decidegrees, clockwise NEGATIVE — the sim tracks clockwise-positive, so flip */
+    tilt_angles: sy('tilt_angles', () => [-Math.round(yawAngle() * 10), 0, 0]),
+    reset_yaw: sy('reset_yaw', (angle) => { S.yawRef = S.yaw + ((angle || 0) / 10); return null; })
+  };
+
+  const sound = {
+    beep: aw('beep', async (freq, duration, volume) => {
+      const f = freq == null ? 440 : freq, d = (duration == null ? 500 : duration) / 1000;
+      const note = 69 + 12 * Math.log2(Math.max(20, f) / 440);
+      voice('triangle', [[0, f], [1, f]], d, (volume == null ? 100 : volume) / 100);
+      S.beeps++; await sleep(d * 1000 + 30); return 0;
+    }),
+    stop: sy('stop', () => { stopAllSounds(); return null; })
+  };
+
+  const hub = {
+    port: { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5 },
+    light_matrix, motion_sensor, sound
+  };
+
+  return {
+    hub,
+    'hub.light_matrix': light_matrix,
+    'hub.motion_sensor': motion_sensor,
+    'hub.sound': sound,
+    color: Object.assign({}, COLOR_ENUM),
+
+    motor: {
+      CLOCKWISE: 0, COUNTERCLOCKWISE: 1, SHORTEST_PATH: 2,
+      COAST: 0, BRAKE: 1, HOLD: 2,
+      run_for_degrees: aw('run_for_degrees', (port, degrees, velocity, kw) => motorFor(port, degrees, velocity, kw)),
+      run_for_time: aw('run_for_time', async (port, duration, velocity) => {
+        if (P(port) !== ROBOT.arm) { await sleep(120); return 0; }
+        S.armSpeed = velToArm(velocity);
+        S.armDir = (velocity || 0) < 0 ? 'CCW' : 'CW';
+        S.armCmd = { dir: S.armDir, speed: S.armSpeed, done: 0, target: null, finished: false };
+        const t0 = simNow; await until(() => simNow - t0 >= duration);
+        S.armCmd = null; return 0;
+      }),
+      run: sy('run', (port, velocity) => {
+        if (P(port) !== ROBOT.arm) return null;
+        S.armSpeed = velToArm(velocity); S.armDir = (velocity || 0) < 0 ? 'CCW' : 'CW';
+        S.armCmd = { dir: S.armDir, speed: S.armSpeed, done: 0, target: null, finished: false };
+        return null;
+      }),
+      stop: sy('stop', (port) => { if (P(port) === ROBOT.arm) S.armCmd = null; return null; }),
+      relative_position: sy('relative_position', () => Math.round(S.armAngle)),
+      absolute_position: sy('absolute_position', () => { let a = Math.round(S.armAngle) % 360; if (a > 180) a -= 360; return a; }),
+      reset_relative_position: sy('reset_relative_position', (port, pos) => { S.armAngle = pos || 0; return null; })
+    },
+
+    motor_pair: {
+      PAIR_1: 0, PAIR_2: 1, PAIR_3: 2,
+      pair: sy('pair', (pairId, left, right) => { S.pair = P(left) + P(right); return null; }),
+      unpair: sy('unpair', () => { S.pair = ''; return null; }),
+      move_for_degrees: aw('move_for_degrees', (pairId, degrees, steering, kw) => driveFor(degrees, steering, kw)),
+      move_for_time: aw('move_for_time', (pairId, duration, steering, kw) => driveForTime(duration, steering, kw)),
+      move: sy('move', (pairId, steering, kw) => {
+        if (S.pair !== 'CD') return null;
+        S.speed = velToDrive(kw && kw.velocity);
+        S.drive = { sign: 1, steer: steering || 0, done: 0, target: null, finished: false };
+        return null;
+      }),
+      stop: sy('stop', () => { S.drive = null; return null; })
+    },
+
+    color_sensor: {
+      color: sy('color', () => { const c = PAINT_TO_ENUM[paintAt(sensorPos())]; return c === undefined ? -1 : c; }),
+      reflection: sy('reflection', () => REFLECT[paintAt(sensorPos())] || 0)
+    },
+    distance_sensor: {
+      /* millimetres, and -1 when nothing is within range — exactly like the real one */
+      distance: sy('distance', () => { const cm = distCm(); return cm >= 200 ? -1 : Math.round(cm * 10); })
+    },
+    force_sensor: {
+      pressed: sy('pressed', () => forcePressed()),
+      force: sy('force', () => (forcePressed() ? 100 : 0))
+    },
+
+    runloop: {
+      run: { __native: true, name: 'run', fn: (c) => { if (c && c.__coro) { c.awaited = true; return c.run(); } return null; } },
+      sleep_ms: aw('sleep_ms', async (ms) => { await sleep(ms); return 0; }),
+      until: aw('until', async (fn, timeout) => {
+        const t0 = simNow;
+        for (;;) {
+          if (!running) return 0;
+          if (timeout && simNow - t0 > timeout) return 0;
+          const v = pyCallPython ? await pyCallPython(fn, []) : true;
+          if (pyTruthy(v)) return 0;
+          await frame();
+        }
+      })
+    }
+  };
+}
+
+/* ==========================================================================
+   Running a Python program against the simulator
+   ========================================================================== */
+let pyOut = [];
+
+async function runPythonProgram() {
+  const code = $('pycode').value;
+  pyClearConsole();
+  resetSim();
+  pyOut = [];
+
+  running = true; simNow = 0; finished = false;
+  $('btn-run').classList.add('stopping');
+  setPairText($('btn-run'), U('stop'));
+  fb('info', ...U('running'));
+  raf = nextFrame(tick);
+
+  let lastYield = performance.now();
+  let stopped = false;
+
+  try {
+    await runPython(code, {
+      modules: spikeModules(),
+      print: (t) => { pyOut.push(t); pyPrint(t); },
+      bindCall: (fn) => { pyCallPython = fn; },
+      onStep: async () => {
+        if (!running) { stopped = true; throw { pyStop: true }; }
+        /* yield a real frame when one is due, so the sim advances and Stop works,
+           without throttling pure computation to one frame per 64 operations */
+        if (performance.now() - lastYield > 12) {
+          lastYield = performance.now();
+          await new Promise(r => nextFrame(r));
+        }
+      }
+    }).then(res => {
+      if (res && res.forgotten && res.forgotten.length) {
+        pyPrint('⚠ ' + L1(
+          '你呼叫了 ' + res.forgotten.join('、') + ' 但前面沒有加 await，所以它其實沒有執行。',
+          'You called ' + res.forgotten.join(', ') + ' without await, so it never actually ran.'), 'warn');
+      }
+    });
+  } catch (e) {
+    if (e && e.pyStop) stopped = true;
+    else if (e && e.pyError) {
+      pyPrint((e.line ? (L1('第 ', 'Line ') + e.line + L1(' 行：', ': ')) : '') + L1(e.zh, e.en), 'err');
+      running = false;
+      finished = true;
+      clearTimeout(raf); cancelAnimationFrame(raf);
+      $('btn-run').classList.remove('stopping');
+      setPairText($('btn-run'), U('run'));
+      if (S) { S.drive = null; S.armCmd = null; drawField(); drawHub(); }
+      fb('bad', '🐍 程式有錯誤，看看下面的訊息。', '🐍 Your program has an error — read the message below.');
+      return;
+    } else { console.error(e); }
+  }
+
+  running = false;
+  if (!stopped) finish('end');
+  else { clearTimeout(raf); cancelAnimationFrame(raf); $('btn-run').classList.remove('stopping'); setPairText($('btn-run'), U('run')); }
+}
+
+/* ------------------------------------------------------------------ console */
+function pyClearConsole() { const c = $('pyconsole'); if (c) c.textContent = ''; }
+function pyPrint(text, cls) {
+  const c = $('pyconsole'); if (!c) return;
+  const d = document.createElement('div');
+  d.className = 'pyline' + (cls ? ' ' + cls : '');
+  d.textContent = text;
+  c.appendChild(d);
+  c.scrollTop = c.scrollHeight;
+}
+
+/* ------------------------------------------------------------------ editor */
+const PY_KEYWORDS = /\b(if|elif|else|while|for|in|def|return|break|continue|pass|and|or|not|True|False|None|import|from|async|await|global)\b/g;
+const PY_API = /\b(motor_pair|motor|color_sensor|distance_sensor|force_sensor|light_matrix|motion_sensor|runloop|hub|port|color|sound|print|range|len|str|int|abs|round)\b/g;
+
+function pyHighlight(src) {
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return src.split('\n').map(line => {
+    /* comment first, so nothing inside it gets styled */
+    const hash = line.indexOf('#');
+    let code = hash >= 0 ? line.slice(0, hash) : line;
+    const comment = hash >= 0 ? line.slice(hash) : '';
+    /* protect strings while the other patterns run */
+    const strs = [];
+    code = code.replace(/(f?"[^"]*"|f?'[^']*')/g, m => { strs.push(m); return ' ' + (strs.length - 1) + ' '; });
+    code = esc(code)
+      .replace(PY_KEYWORDS, '<b class="k">$1</b>')
+      .replace(PY_API, '<b class="a">$1</b>')
+      .replace(/\b(\d+\.?\d*)\b/g, '<b class="n">$1</b>');
+    code = code.replace(/ (\d+) /g, (m, i) => '<b class="s">' + esc(strs[+i]) + '</b>');
+    return code + (comment ? '<b class="c">' + esc(comment) + '</b>' : '');
+  }).join('\n');
+}
+
+function pySyncEditor() {
+  const ta = $('pycode'), hi = $('pyhi'), ln = $('pylines');
+  if (!ta) return;
+  hi.innerHTML = pyHighlight(ta.value) + '\n';
+  const count = ta.value.split('\n').length;
+  ln.textContent = Array.from({ length: count }, (_, i) => i + 1).join('\n');
+  hi.scrollTop = ta.scrollTop; hi.scrollLeft = ta.scrollLeft;
+  ln.scrollTop = ta.scrollTop;
+}
+
+function pyInitEditor() {
+  const ta = $('pycode');
+  ta.addEventListener('input', () => { pySyncEditor(); pyStash(); });
+  ta.addEventListener('scroll', pySyncEditor);
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Tab') {                       // Tab indents rather than leaving the box
+      e.preventDefault();
+      const s = ta.selectionStart, en = ta.selectionEnd;
+      ta.value = ta.value.slice(0, s) + '    ' + ta.value.slice(en);
+      ta.selectionStart = ta.selectionEnd = s + 4;
+      pySyncEditor(); pyStash();
+    } else if (e.key === 'Enter') {              // keep the current indent on a new line
+      const s = ta.selectionStart;
+      const lineStart = ta.value.lastIndexOf('\n', s - 1) + 1;
+      const cur = ta.value.slice(lineStart, s);
+      const indent = (cur.match(/^[ ]*/) || [''])[0] + (/:\s*$/.test(cur) ? '    ' : '');
+      if (indent) {
+        e.preventDefault();
+        ta.value = ta.value.slice(0, s) + '\n' + indent + ta.value.slice(ta.selectionEnd);
+        ta.selectionStart = ta.selectionEnd = s + 1 + indent.length;
+        pySyncEditor(); pyStash();
+      }
+    }
+  });
+}
+
+/**
+ * A step's Python starter. Rather than hand-writing 63 skeletons, build one
+ * from the blocks that step allows, so the imports on screen are exactly the
+ * ones the task needs — and nothing more.
+ */
+function pyStarter(st) {
+  if (st.py) return st.py;
+  const has = t => st.blocks === '*' || (st.blocks || []).indexOf(t) >= 0;
+  const anyOf = (...t) => t.some(has);
+
+  const fromHub = ['port'];
+  const imports = ['runloop'];
+  const body = [];
+
+  if (anyOf('mv_move', 'mv_steer', 'mv_start', 'mv_startsteer', 'mv_stop', 'mv_setmotors', 'mv_speed')) {
+    imports.push('motor_pair');
+    body.push('    motor_pair.pair(motor_pair.PAIR_1, port.' + ROBOT.driveL + ', port.' + ROBOT.driveR + ')');
+  }
+  if (anyOf('mt_run', 'mt_start', 'mt_stop', 'mt_speed', 'mt_pos')) imports.push('motor');
+  if (anyOf('sn_iscolor', 'sn_color', 'sn_isreflect', 'sn_reflect')) imports.push('color_sensor');
+  if (anyOf('sn_isdist', 'sn_dist')) imports.push('distance_sensor');
+  if (anyOf('sn_isforce', 'sn_force')) imports.push('force_sensor');
+  if (anyOf('sn_isyaw', 'sn_yaw', 'sn_resetyaw')) fromHub.push('motion_sensor');
+  if (anyOf('lt_show', 'lt_showfor', 'lt_off', 'lt_write', 'lt_bright', 'lt_pixel', 'lt_center')) fromHub.push('light_matrix');
+  if (anyOf('sd_play', 'sd_start', 'sd_stop', 'sd_volume')) fromHub.push('sound');
+
+  const lines = [
+    'from hub import ' + fromHub.join(', '),
+    'import ' + imports.join(', '),
+    '',
+    'async def main():'
+  ].concat(body);
+  lines.push('    ' + L1('# 在這裡寫你的程式', '# write your program here'));
+  lines.push('    ');
+  lines.push('');
+  lines.push('runloop.run(main())');
+  return lines.join('\n');
+}
+
+/* per-step code, so switching steps or languages does not lose a kid's work */
+const pyCodeStore = {};
+function pyKey() { return unitId + '/' + lessonId + '/' + stepIdx; }
+function pyStash() { pyCodeStore[pyKey()] = $('pycode').value; }
+function pyLoadForStep() {
+  const k = pyKey();
+  $('pycode').value = pyCodeStore[k] !== undefined ? pyCodeStore[k] : pyStarter(step);
+  pySyncEditor();
+  pyClearConsole();
+}
+function pyResetCode() {
+  delete pyCodeStore[pyKey()];
+  $('pycode').value = pyStarter(step);
+  pySyncEditor(); pyClearConsole();
+}
+
+/* ------------------------------------------------------------------ modes */
+let mode = 'blocks';
+try { const m = localStorage.getItem('spike_mode'); if (m === 'blocks' || m === 'python') mode = m; } catch (e) {}
+
+function setMode(m) {
+  if (step && step.pyOnly) m = 'python';        // console lessons have no block form
+  mode = m;
+  try { localStorage.setItem('spike_mode', m); } catch (e) {}
+  document.body.classList.toggle('py-mode', m === 'python');
+  [...$('modes').children].forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+  const bb = $('mode-blocks');
+  bb.disabled = !!(step && step.pyOnly);
+  bb.style.opacity = bb.disabled ? '.35' : '';
+  bb.style.cursor = bb.disabled ? 'not-allowed' : '';
+  if (m === 'python') { pyLoadForStep(); }
+  else if (ws) { Blockly.svgResize(ws); }
+  if (step) { fitCanvas(); drawField(); }
+}
+
+/* ------------------------------------------------------------------ start */
+/* Every part has now evaluated, so it is safe to build the UI. */
+function bootAll() {
+  boot();
+  setMode(mode);
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootAll);
+else bootAll();
 
 </script>
 </body>
