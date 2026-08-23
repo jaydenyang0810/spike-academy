@@ -440,6 +440,7 @@ body.py-mode .pypane{display:flex}
 
 /* ============================ RESPONSIVE ============================ */
 @media (max-width:1024px){
+  .pyconsole{height:92px}
   #ws.on{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
   .pane-l{border-right:none;border-bottom:1px solid var(--line)}
   .masthead{grid-template-columns:1fr}
@@ -3845,15 +3846,15 @@ const CUR = [
       steps: [
         st('看積木左邊的圖案。用粉紅色（兩個齒輪）的積木，前進 3 格。',
            'Look at the icon on the left of each block. Use a PINK block (two gears) to drive forward 3 squares.',
-           { blocks: ['ev_start', 'mv_move'], need: ['mv_move'],
+           { blocksOnly: true, blocks: ['ev_start', 'mv_move'], need: ['mv_move'],
              spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 4.5, r: 3 } }),
         st('藍色積木只轉一顆馬達。讓 E 馬達（你的手臂）順時針轉 2 圈，看看手臂會怎麼動。',
            'Blue blocks turn ONE motor. Run motor E — your arm — clockwise for 2 rotations and watch it move.',
-           { blocks: ['ev_start', 'mt_run'], need: ['mt_run'], win: S => S.armRot >= 1.9,
+           { blocksOnly: true, blocks: ['ev_start', 'mt_run'], need: ['mt_run'], win: S => S.armRot >= 1.9,
              spawn: { c: 3.5, r: 3, a: 90 }, goal: null }),
         st('兩種都用：先前進 3 格，再把手臂舉起來（E 馬達順時針 1 圈）。',
            'Use both: drive forward 3 squares, then raise the arm (motor E clockwise 1 rotation).',
-           { blocks: ['ev_start', 'mv_move', 'mt_run'], need: ['mv_move', 'mt_run'],
+           { blocksOnly: true, blocks: ['ev_start', 'mv_move', 'mt_run'], need: ['mv_move', 'mt_run'],
              win: S => S.atGoal() && S.armRot >= 0.9,
              spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 4.5, r: 3 } })
       ]
@@ -3865,7 +3866,9 @@ const CUR = [
       steps: [
         st('先用「將運轉馬達設定為」告訴機器人輪子在哪一組連接埠，再前進 4 格。',
            'First tell the robot which ports its wheels are on with "set movement motors to", then drive 4 squares.',
-           { blocks: ['ev_start', 'mv_setmotors', 'mv_move'], need: ['mv_setmotors'],
+           { pyZh: '用 motor_pair.pair( ) 告訴機器人輪子接在哪兩個連接埠，再前進 4 格。',
+             pyEn: 'Use motor_pair.pair( ) to tell the robot which two ports its wheels are on, then drive 4 squares.',
+             blocks: ['ev_start', 'mv_setmotors', 'mv_move'], need: ['mv_setmotors'],
              spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 5.5, r: 3 }, pair: 'AB',
              whyZh: '設成別的連接埠，機器人就不知道要轉哪兩顆馬達，當然不會動。看看集線器上哪兩個埠是粉紅色的。',
              whyEn: 'With the wrong ports the robot does not know which motors to spin, so it stays still. Look at which two ports are pink on the hub.' }),
@@ -3892,7 +3895,9 @@ const CUR = [
              spawn: { c: 3.5, r: 3, a: 90 }, goal: null }),
         st('慢一點比較穩：先「將速度設定為 30%」，再讓手臂順時針轉 2 圈。',
            'Slower is steadier: set the motor speed to 30%, then run the arm clockwise 2 rotations.',
-           { blocks: ['ev_start', 'mt_speed', 'mt_run'], need: ['mt_speed', 'mt_run'],
+           { pyZh: '慢一點比較穩。Python 的速度單位是「度/秒」，不是百分比——用大約 200 的速度讓手臂順時針轉 2 圈。',
+             pyEn: 'Slower is steadier. In Python velocity is degrees per second, not a percentage — run the arm clockwise 2 rotations at about 200.',
+             blocks: ['ev_start', 'mt_speed', 'mt_run'], need: ['mt_speed', 'mt_run'],
              win: S => S.armRot >= 1.9 && S.armSpeed <= 40,
              spawn: { c: 3.5, r: 3, a: 90 }, goal: null }),
         st('手臂也可以用「度」：前進 2 格，再讓手臂順時針轉 720 度（等於 2 圈）。',
@@ -3924,7 +3929,9 @@ const CUR = [
              items: [{ c: 5.5, r: 3 }], win: S => S.atGoal() && S.gotItems === 1 }),
         st('把單位換成「度」：360 度＝1 圈＝1 格。用「度」前進 1080 度抵達目標。',
            'Switch the unit to degrees: 360 degrees = 1 rotation = 1 square. Drive 1080 degrees to the target.',
-           { blocks: ['ev_start', 'mv_move'], spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 4.5, r: 3 },
+           { pyZh: 'Python 的 move_for_degrees 本來就是用「度」：360 度＝1 圈＝1 格。開 1080 度抵達目標。',
+             pyEn: 'move_for_degrees already works in degrees: 360 degrees = 1 rotation = 1 square. Drive 1080 degrees to the target.',
+             blocks: ['ev_start', 'mv_move'], spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 4.5, r: 3 },
              whyZh: '記得把積木上的下拉選單從「圈」改成「度」。',
              whyEn: 'Remember to change the dropdown on the block from rotations to degrees.' })
       ]
@@ -4025,7 +4032,9 @@ const CUR = [
       steps: [
         st('用沒有次數的「重複執行」讓手臂一直轉。轉幾圈之後按「停止」，看看結果。',
            'Use the repeat block with no number to spin the arm forever. Let it turn a few times, then press Stop.',
-           { blocks: ['ev_start', 'ct_forever', 'mt_run'], need: ['ct_forever', 'mt_run'],
+           { pyZh: '用 while True: 讓手臂一直轉。轉幾圈之後按「停止」，看看結果。',
+             pyEn: 'Use while True: to spin the arm forever. Let it turn a few times, then press Stop.',
+             blocks: ['ev_start', 'ct_forever', 'mt_run'], need: ['ct_forever', 'mt_run'],
              win: S => S.armRot >= 2, spawn: { c: 3.5, r: 3, a: 90 }, goal: null }),
         st('一格一格慢慢走：重複 4 次（前進 1 格、等待 1 秒）。',
            'Step forward one square at a time: repeat 4 times (forward 1, wait 1 seconds).',
@@ -4109,7 +4118,9 @@ const CUR = [
              paint: [{ c: 5, r: 0, w: 1, h: 6, col: 'BLACK' }] }),
         st('這次用「如果⋯那麼⋯否則」：反射 < 30% 就停止，否則繼續前進。記得用「重複執行」包起來。',
            'Now with if-then-else: if reflection is under 30% stop, otherwise keep moving. Wrap it in a repeat block.',
-           { blocks: ['ev_start', 'ct_forever', 'ct_ifelse', 'sn_isreflect', 'mv_start', 'mv_stop', 'ct_stopall'],
+           { pyZh: '用 while True: 包住 if / else：反射光 < 30 就停止，否則繼續前進。',
+             pyEn: 'Wrap an if / else inside while True: if reflection is under 30 stop, otherwise keep moving.',
+             blocks: ['ev_start', 'ct_forever', 'ct_ifelse', 'sn_isreflect', 'mv_start', 'mv_stop', 'ct_stopall'],
              need: ['ct_ifelse', 'sn_isreflect'], win: onColor('BLACK'),
              spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 5.5, r: 3, kind: 'line' },
              paint: [{ c: 5, r: 0, w: 1, h: 6, col: 'BLACK' }] }),
@@ -4217,7 +4228,9 @@ const CUR = [
       steps: [
         st('把變數 A 設成 4，然後把橘色的「A」積木拖進移動積木的圓形格子裡。',
            'Set variable A to 4, then drag the orange "A" block into the round slot on the move block.',
-           { blocks: ['ev_start', 'va_set', 'va_num', 'va_get', 'mv_move'], need: ['va_set', 'va_get'],
+           { pyZh: '把變數 A 設成 4，然後把 A 放進 move_for_degrees 的度數裡（記得 1 格＝360 度）。',
+             pyEn: 'Set a variable A to 4, then use A for the degrees in move_for_degrees (remember 1 square = 360 degrees).',
+             blocks: ['ev_start', 'va_set', 'va_num', 'va_get', 'mv_move'], need: ['va_set', 'va_get'],
              spawn: { c: 1.5, r: 3, a: 90 }, goal: { c: 5.5, r: 3 } }),
         st('變數也可以拿來轉彎：把 B 設成一個直角的馬達度數，再用 B 走一個 L 形。',
            'Variables work for turning too: set B to the motor degrees of one corner, then drive an L shape using B.',
@@ -4240,18 +4253,24 @@ const CUR = [
       steps: [
         st('定義一個自訂積木：前進 2 格＋向右轉一個直角。然後呼叫它兩次。',
            'Define a My Block: forward 2 + turn right one corner. Then call it twice.',
-           { blocks: ['ev_start', 'my_define', 'my_call', 'mv_move', 'mv_steer'], need: ['my_call'],
+           { pyZh: '用 def 寫一個自己的函式：前進 2 格＋向右轉一個直角。然後呼叫它兩次。',
+             pyEn: 'Write your own function with def: forward 2 squares + turn right one corner. Then call it twice.',
+             blocks: ['ev_start', 'my_define', 'my_call', 'mv_move', 'mv_steer'], need: ['my_call'],
              spawn: { c: 1.5, r: 1.5, a: 90 }, goal: { c: 3.5, r: 3.5, tol: 0.6 },
              win: S => S.atGoal() && S.myCalls >= 2 }),
         st('自訂積木裡面也可以放迴圈。把整個正方形包成一個積木，然後只呼叫一次。',
            'A My Block can hold a loop. Wrap the whole square into one block, then call it just once.',
-           { blocks: ['ev_start', 'my_define', 'my_call', 'ct_repeat', 'mv_move', 'mv_steer'],
+           { pyZh: '函式裡面也可以放迴圈。把整個正方形包成一個函式，然後只呼叫一次。',
+             pyEn: 'A function can hold a loop. Wrap the whole square into one function, then call it just once.',
+             blocks: ['ev_start', 'my_define', 'my_call', 'ct_repeat', 'mv_move', 'mv_steer'],
              need: ['my_call', 'ct_repeat'],
              spawn: { c: 2.5, r: 3.5, a: 0 }, goal: { c: 2.5, r: 3.5, kind: 'home', tol: 0.8 },
              win: S => S.atGoal() && S.myCalls >= 1 }),
         st('用自訂積木開到綠色區域，再用 E 馬達舉起手臂完成任務。',
            'Use your My Block to reach the green zone, then raise the arm with motor E to finish the mission.',
-           { blocks: ['ev_start', 'my_define', 'my_call', 'mv_move', 'mv_steer', 'mt_run'],
+           { pyZh: '用你自己的函式開到綠色區域，再用 motor.run_for_degrees 舉起手臂。',
+             pyEn: 'Use your own function to reach the green zone, then raise the arm with motor.run_for_degrees.',
+             blocks: ['ev_start', 'my_define', 'my_call', 'mv_move', 'mv_steer', 'mt_run'],
              need: ['my_call', 'mt_run'],
              spawn: { c: 0.5, r: 4.5, a: 90 }, goal: { c: 4.5, r: 4.5, kind: 'zone', tol: 0.6 },
              win: S => S.atGoal() && S.armRot >= 0.9 })
@@ -4264,7 +4283,9 @@ const CUR = [
       steps: [
         st('把「開始移動→等待紅色→停止運動」整段包成一個自訂積木，然後呼叫它。',
            'Wrap "start moving → wait for red → stop moving" into a single My Block, then call it.',
-           { blocks: ['ev_start', 'my_define', 'my_call', 'mv_start', 'ct_waituntil', 'sn_iscolor', 'mv_stop'],
+           { pyZh: '把「開始移動→等到看見紅色→停止」整段包成一個 async 函式，然後 await 它。',
+             pyEn: 'Wrap "start moving → wait for red → stop" into one async function, then await it.',
+             blocks: ['ev_start', 'my_define', 'my_call', 'mv_start', 'ct_waituntil', 'sn_iscolor', 'mv_stop'],
              need: ['my_call'], win: S => onColor('RED')(S) && S.myCalls >= 1,
              spawn: { c: 0.5, r: 3, a: 90 }, goal: { c: 5.5, r: 3, kind: 'line' },
              paint: [{ c: 5, r: 0, w: 1, h: 6, col: 'RED' }] }),
@@ -4300,7 +4321,9 @@ const CUR = [
       steps: [
         st('放一個「點亮矩陣」，點積木上的小圖案打開設計視窗，畫出你想要的圖案，然後執行。看看場地上的機器人！',
            'Add a "turn on matrix" block, click the little picture on it to open the designer, draw your pattern, then run. Watch the robot on the field!',
-           { blocks: ['ev_start', 'lt_show'], need: ['lt_show'], win: S => S.matrixCount > 0,
+           { pyZh: '用 light_matrix.show_image( ) 顯示一個內建圖案，例如 light_matrix.IMAGE_HEART。看看場地上的機器人！',
+             pyEn: 'Use light_matrix.show_image( ) with a built-in pattern such as light_matrix.IMAGE_HEART. Watch the robot on the field!',
+             blocks: ['ev_start', 'lt_show'], need: ['lt_show'], win: S => S.matrixCount > 0,
              spawn: { c: 3.5, r: 3, a: 90 }, goal: null }),
         st('做一個會閃的圖案：點亮一個圖案 1 秒，再點亮另一個不一樣的圖案。',
            'Make it flash: turn on one pattern for 1 second, then turn on a different one.',
@@ -4319,7 +4342,9 @@ const CUR = [
       steps: [
         st('放一個「播放聲音」，從下拉選單挑一個你喜歡的，然後執行。每一個都試試看！',
            'Add a "play sound" block, pick one you like from the dropdown, and run it. Try them all!',
-           { blocks: ['ev_start', 'sd_play', 'sd_volume'], need: ['sd_play'], win: S => S.beeps > 0,
+           { pyZh: '用 sound.beep(freq, duration, volume) 發出聲音。換不同的 freq 數字聽聽看。',
+             pyEn: 'Make a sound with sound.beep(freq, duration, volume). Try different freq numbers and listen.',
+             blocks: ['ev_start', 'sd_play', 'sd_volume'], need: ['sd_play'], win: S => S.beeps > 0,
              spawn: { c: 3.5, r: 3, a: 90 }, goal: null }),
         st('開到星星那裡，抵達之後播放「Win」慶祝一下。',
            'Drive to the star, then play the "Win" sound to celebrate when you arrive.',
@@ -4971,6 +4996,9 @@ function diagnose(why) {
             '⭐ ' + (S.items.length - S.gotItems) + ' star(s) still to collect.'];
   if (step.whyZh) return [step.whyZh, step.whyEn];
 
+  if (mode === 'python' && S.myCalls === 0 && step.win && /myCalls/.test(step.win.toString()))
+    return ['🐍 這一關要你用 def 寫一個自己的函式，然後呼叫它——目前還沒有看到。',
+            '🐍 This task asks you to write your own function with def and then call it — that has not happened yet.'];
   if (step.goal && step.goal.kind === 'line') {
     const nm = COLOR_NAME[paintAt(sensorPos())] || COLOR_NAME.WHITE;
     return ['🎨 你停下來的時候，感測器看到的是' + nm[0] + '，不是這一關要找的顏色。',
@@ -5427,7 +5455,8 @@ function loadStep() {
 
   renderSteps();
 
-  $('task-zh').textContent = L1(step.zh, step.en);
+  const usePy = mode === 'python' && step.pyZh;
+  $('task-zh').textContent = usePy ? L1(step.pyZh, step.pyEn) : L1(step.zh, step.en);
   $('task-en').textContent = '';
 
   ws.updateToolbox(buildToolbox());
@@ -5440,8 +5469,7 @@ function loadStep() {
   S = null;
   fitCanvas();
   resetSim();
-  if (step.pyOnly && mode !== 'python') setMode('python');
-  else if (mode === 'python') pyLoadForStep();
+  setMode(mode);
   fb('', ...(sandbox ? U('sandboxRun') : U('ready')));
 }
 
@@ -5573,7 +5601,8 @@ function toggleLang() {
   const dom = ws ? Blockly.Xml.workspaceToDom(ws) : null;
   renderCrumb();
   renderSteps();
-  $('task-zh').textContent = L1(step.zh, step.en);
+  const usePy = mode === 'python' && step.pyZh;
+  $('task-zh').textContent = usePy ? L1(step.pyZh, step.pyEn) : L1(step.zh, step.en);
   $('task-en').textContent = '';
   ws.updateToolbox(buildToolbox());
   renderRail();
@@ -5701,6 +5730,16 @@ function tokenize(src) {
       const c = raw[i];
       if (c === ' ' || c === '\t') { i++; continue; }
       if (c === '#') break;
+
+      /* triple-quoted string, single line only */
+      if ((c === '"' || c === "'") && raw[i + 1] === c && raw[i + 2] === c) {
+        const q = c.repeat(3);
+        const end = raw.indexOf(q, i + 3);
+        if (end < 0) throw PyErr('目前不支援跨越多行的三引號字串。請改用 # 註解。',
+                                 'Triple-quoted strings spanning several lines are not supported here. Use a # comment instead.', lineNo);
+        toks.push({ t: 'STR', v: raw.slice(i + 3, end), line: lineNo });
+        i = end + 3; continue;
+      }
 
       /* f-string or plain string */
       if (c === 'f' && (raw[i + 1] === '"' || raw[i + 1] === "'")) {
@@ -6010,6 +6049,7 @@ async function runPython(src, opts) {
     throw PyErr('這個東西不能當作函式來呼叫。', 'This is not something you can call like a function.', ln);
   }
   async function invoke(f, args, ln) {
+    if (o.onCall) o.onCall(f.name);
     if (args.length !== f.params.length)
       throw PyErr('函式「' + f.name + '」需要 ' + f.params.length + ' 個參數，但你給了 ' + args.length + ' 個。',
                   'Function "' + f.name + '" takes ' + f.params.length + ' argument(s), but got ' + args.length + '.', ln);
@@ -6238,6 +6278,7 @@ const LED_IMAGES = {
 };
 
 let pyCallPython = null;      // late-bound: lets native code invoke a Python callable
+let pyInUntil = false;        // true while runloop.until is polling a predicate
 
 /** Builds the module table handed to the interpreter, wired to the live sim. */
 function spikeModules() {
@@ -6396,7 +6437,9 @@ function spikeModules() {
         for (;;) {
           if (!running) return 0;
           if (timeout && simNow - t0 > timeout) return 0;
+          pyInUntil = true;                       // predicate calls are not "My Block" calls
           const v = pyCallPython ? await pyCallPython(fn, []) : true;
+          pyInUntil = false;
           if (pyTruthy(v)) return 0;
           await frame();
         }
@@ -6429,6 +6472,9 @@ async function runPythonProgram() {
     await runPython(code, {
       modules: spikeModules(),
       print: (t) => { pyOut.push(t); pyPrint(t); },
+      /* Defining a routine and calling it is the Python form of a My Block, so the
+         My Blocks tasks are winnable here too. main() and predicates do not count. */
+      onCall: (name) => { if (name !== 'main' && !pyInUntil) S.myCalls++; },
       bindCall: (fn) => { pyCallPython = fn; },
       onStep: async () => {
         if (!running) { stopped = true; throw { pyStop: true }; }
@@ -6488,14 +6534,18 @@ function pyHighlight(src) {
     const hash = line.indexOf('#');
     let code = hash >= 0 ? line.slice(0, hash) : line;
     const comment = hash >= 0 ? line.slice(hash) : '';
-    /* protect strings while the other patterns run */
+    /* Park each string behind a control character while the other rules run.
+       A numeric placeholder used to be chewed up by the number rule below,
+       which is what turned docstrings into garbage on screen. */
     const strs = [];
-    code = code.replace(/(f?"[^"]*"|f?'[^']*')/g, m => { strs.push(m); return ' ' + (strs.length - 1) + ' '; });
+    code = code.replace(/("""[^]*?"""|'''[^]*?'''|f?"[^"]*"|f?'[^']*')/g,
+                        m => { strs.push(m); return '\u0001'; });
     code = esc(code)
       .replace(PY_KEYWORDS, '<b class="k">$1</b>')
       .replace(PY_API, '<b class="a">$1</b>')
       .replace(/\b(\d+\.?\d*)\b/g, '<b class="n">$1</b>');
-    code = code.replace(/ (\d+) /g, (m, i) => '<b class="s">' + esc(strs[+i]) + '</b>');
+    let si = 0;
+    code = code.replace(/\u0001/g, () => '<b class="s">' + esc(strs[si++]) + '</b>');
     return code + (comment ? '<b class="c">' + esc(comment) + '</b>' : '');
   }).join('\n');
 }
@@ -6597,14 +6647,20 @@ try { const m = localStorage.getItem('spike_mode'); if (m === 'blocks' || m === 
 
 function setMode(m) {
   if (step && step.pyOnly) m = 'python';        // console lessons have no block form
+  if (step && step.blocksOnly) m = 'blocks';    // and a lesson about block colours has no Python form
   mode = m;
   try { localStorage.setItem('spike_mode', m); } catch (e) {}
   document.body.classList.toggle('py-mode', m === 'python');
   [...$('modes').children].forEach(b => b.classList.toggle('on', b.dataset.mode === m));
-  const bb = $('mode-blocks');
+  const bb = $('mode-blocks'), pb = $('mode-python');
   bb.disabled = !!(step && step.pyOnly);
-  bb.style.opacity = bb.disabled ? '.35' : '';
-  bb.style.cursor = bb.disabled ? 'not-allowed' : '';
+  pb.disabled = !!(step && step.blocksOnly);
+  [bb, pb].forEach(b => { b.style.opacity = b.disabled ? '.35' : ''; b.style.cursor = b.disabled ? 'not-allowed' : ''; });
+  /* the instruction itself may differ between the two tabs */
+  if (step) {
+    const usePy = m === 'python' && step.pyZh;
+    $('task-zh').textContent = usePy ? L1(step.pyZh, step.pyEn) : L1(step.zh, step.en);
+  }
   if (m === 'python') { pyLoadForStep(); }
   else if (ws) { Blockly.svgResize(ws); }
   if (step) { fitCanvas(); drawField(); }
