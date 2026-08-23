@@ -437,6 +437,7 @@ body.py-mode .pypane{display:flex}
   fill:#4A5B6B!important;
 }
 .blocklyScrollbarHandle{fill:#B7C3D1!important}
+.blocklyTrash{scale:.85;transform-box:fill-box;transform-origin:100% 100%}
 
 /* ============================ RESPONSIVE ============================ */
 @media (max-width:1024px){
@@ -5376,6 +5377,35 @@ function enterWorkspace() {
   }, 0);
 }
 
+/**
+ * Blockly decides a drop lands on the bin by testing the POINTER against the
+ * bin's rectangle. A child dragging a wide block usually holds it by the left
+ * edge, so the block can be sitting squarely on the bin while the cursor is
+ * still well clear of it, and nothing happens.
+ *
+ * This widens the test: if any part of the dragged block overlaps the bin, the
+ * bin is the drop target. The bin's rect is read from the DOM so it always
+ * matches what is on screen, including the 85% scale.
+ */
+function installTrashContactHitbox(workspace) {
+  const original = workspace.getDragTarget.bind(workspace);
+  workspace.getDragTarget = function (e) {
+    const bin = workspace.trashcan;
+    if (bin) {
+      const binEl = bin.svgGroup || document.querySelector('.blocklyTrash');
+      const dragged = document.querySelector('.blocklyDragging');
+      if (binEl && dragged) {
+        const t = binEl.getBoundingClientRect();
+        const b = dragged.getBoundingClientRect();
+        const overlaps = b.right > t.left && b.left < t.right &&
+                         b.bottom > t.top && b.top < t.bottom;
+        if (overlaps) return bin;
+      }
+    }
+    return original(e);
+  };
+}
+
 function renderCrumb() {
   const crumb = $('crumb'); crumb.textContent = '';
   if (sandbox) {
@@ -5426,6 +5456,8 @@ function ensureWorkspace() {
   };
   try { ws = Blockly.inject('blockly', opts); }
   catch (e) { console.warn('zelos unavailable', e); opts.renderer = 'geras'; ws = Blockly.inject('blockly', opts); }
+
+  installTrashContactHitbox(ws);
 
   new ResizeObserver(() => {
     if (!ws) return;
