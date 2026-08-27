@@ -4572,7 +4572,7 @@ const cmSq = cm => cm / CM_PER_SQ;
 
 /* m(id, name-zh, name-en, x, y, w, h) with x/y the model's centre in cm
    measured from the top-left corner of the mat. */
-const m = (id, zh, en, x, y, w, h) => ({ id, zh, en, x, y, w: w || 12, h: h || 12 });
+const m = (id, zh, en, x, y, w, h, art) => ({ id, zh, en, x, y, w: w || 12, h: h || 12, art: art || 'box' });
 
 const MATS = {
   submerged: {
@@ -4580,21 +4580,21 @@ const MATS = {
     sea: '#0E4C6B', deep: '#0A3A54', sand: '#C8B489',
     launch: { x: 0, y: 59.3, w: 55, h: 55 },
     models: [
-      m('M01','珊瑚苗圃','Coral Nursery',            40,  30, 14, 12),
-      m('M02','鯊魚','Shark',                        95,  20, 13, 10),
-      m('M03','珊瑚礁','Coral Reef',                 60,  70, 16, 12),
-      m('M04','潛水員','Scuba Diver',               120,  55, 10, 12),
-      m('M05','鮟鱇魚','Angler Fish',               150,  25, 12, 10),
-      m('M06','升起桅杆','Raise the Mast',          175,  45, 12, 14),
-      m('M07','海怪的寶藏','Kraken\u2019s Treasure',205,  30, 14, 12),
-      m('M08','人工棲地','Artificial Habitat',      215,  75, 14, 12),
-      m('M09','未知生物','Unknown Creature',        185,  90, 12, 10),
-      m('M10','送出潛水器','Send Over the Submersible',150, 95, 14, 10),
-      m('M11','聲納探索','Sonar Discovery',         115,  90, 12, 10),
-      m('M12','餵食鯨魚','Feed the Whale',           85,  95, 14, 12),
-      m('M13','改變航道','Change Shipping Lanes',    60,  15, 14, 10),
-      m('M14','樣本採集','Sample Collection',        30,  90, 12, 10),
-      m('M15','研究船','Research Vessel',           228,  55, 12, 16)
+      m('M01','珊瑚苗圃','Coral Nursery',            40,  30, 14, 12, 'coral'),
+      m('M02','鯊魚','Shark',                        95,  20, 13, 10, 'shark'),
+      m('M03','珊瑚礁','Coral Reef',                 68,  70, 16, 12, 'reef'),
+      m('M04','潛水員','Scuba Diver',               120,  55, 10, 12, 'diver'),
+      m('M05','鮟鱇魚','Angler Fish',               150,  25, 12, 10, 'fish'),
+      m('M06','升起桅杆','Raise the Mast',          175,  45, 12, 14, 'mast'),
+      m('M07','海怪的寶藏','Kraken\u2019s Treasure',205,  30, 14, 12, 'chest'),
+      m('M08','人工棲地','Artificial Habitat',      215,  75, 14, 12, 'habitat'),
+      m('M09','未知生物','Unknown Creature',        185,  90, 12, 10, 'creature'),
+      m('M10','送出潛水器','Send Over the Submersible',150, 95, 14, 10, 'sub'),
+      m('M11','聲納探索','Sonar Discovery',         115,  90, 12, 10, 'sonar'),
+      m('M12','餵食鯨魚','Feed the Whale',           85,  95, 14, 12, 'whale'),
+      m('M13','改變航道','Change Shipping Lanes',    60,  15, 14, 10, 'lanes'),
+      m('M14','樣本採集','Sample Collection',        88,  45, 12, 10, 'sample'),
+      m('M15','研究船','Research Vessel',           228,  55, 12, 16, 'vessel')
     ]
   },
   unearthed: {
@@ -4605,21 +4605,21 @@ const MATS = {
        tool can vouch for, so they are left as numbers for a team to fill in
        from the season's rulebook using Export / Import. */
     models: [
-      m('M01','任務 01','Mission 01',  38,  28, 13, 12),
-      m('M02','任務 02','Mission 02',  70,  18, 12, 10),
-      m('M03','任務 03','Mission 03',  62,  72, 14, 12),
-      m('M04','任務 04','Mission 04',  98,  50, 12, 12),
-      m('M05','任務 05','Mission 05', 126,  22, 12, 10),
-      m('M06','任務 06','Mission 06', 150,  62, 14, 12),
-      m('M07','任務 07','Mission 07', 178,  28, 12, 12),
-      m('M08','任務 08','Mission 08', 200,  70, 14, 12),
-      m('M09','任務 09','Mission 09', 172,  92, 12, 10),
-      m('M10','任務 10','Mission 10', 140,  96, 13, 10),
-      m('M11','任務 11','Mission 11', 108,  90, 12, 10),
-      m('M12','任務 12','Mission 12',  80,  96, 12, 10),
-      m('M13','任務 13','Mission 13',  30,  92, 12, 10),
-      m('M14','任務 14','Mission 14', 224,  32, 12, 12),
-      m('M15','任務 15','Mission 15', 228,  92, 12, 12)
+      m('M01','任務 01','Mission 01',  38,  28, 13, 12, 'pillar'),
+      m('M02','任務 02','Mission 02',  70,  18, 12, 10, 'pot'),
+      m('M03','任務 03','Mission 03',  62,  72, 14, 12, 'statue'),
+      m('M04','任務 04','Mission 04',  98,  50, 12, 12, 'dig'),
+      m('M05','任務 05','Mission 05', 126,  22, 12, 10, 'crate'),
+      m('M06','任務 06','Mission 06', 150,  62, 14, 12, 'fossil'),
+      m('M07','任務 07','Mission 07', 178,  28, 12, 12, 'marker'),
+      m('M08','任務 08','Mission 08', 200,  70, 14, 12, 'wall'),
+      m('M09','任務 09','Mission 09', 172,  92, 12, 10, 'pillar'),
+      m('M10','任務 10','Mission 10', 140,  96, 13, 10, 'pot'),
+      m('M11','任務 11','Mission 11', 108,  90, 12, 10, 'dig'),
+      m('M12','任務 12','Mission 12',  80,  96, 12, 10, 'crate'),
+      m('M13','任務 13','Mission 13',  52,  44, 12, 10, 'statue'),
+      m('M14','任務 14','Mission 14', 224,  32, 12, 12, 'fossil'),
+      m('M15','任務 15','Mission 15', 228,  92, 12, 12, 'marker')
     ]
   }
 };
@@ -5220,6 +5220,256 @@ function syncZoomUI() {
   if (zo) zo.disabled = view.z <= 1.001;
 }
 
+/* ------------------------------------------------------------- mat surface */
+/* Terrain under the missions, so the mat reads as a field rather than a
+   coloured rectangle. These are original schematic drawings: FIRST's mat
+   artwork is their copyright and is not reproduced anywhere in this file. */
+function matSurface(x, mw, mh, u, M, key) {
+  x.save();
+  x.beginPath(); x.rect(0, 0, mw, mh); x.clip();
+
+  if (key === 'submerged') {
+    /* seabed rising along the bottom, and a lighter shelf on the left */
+    x.fillStyle = 'rgba(255,255,255,.055)';
+    x.beginPath(); x.moveTo(0, mh);
+    x.lineTo(0, mh * .62); x.quadraticCurveTo(mw * .22, mh * .50, mw * .42, mh * .66);
+    x.quadraticCurveTo(mw * .64, mh * .82, mw, mh * .58); x.lineTo(mw, mh); x.closePath(); x.fill();
+
+    x.fillStyle = M.sand; x.globalAlpha = .28;
+    x.beginPath(); x.moveTo(0, mh);
+    x.lineTo(0, mh * .86); x.quadraticCurveTo(mw * .30, mh * .78, mw * .55, mh * .90);
+    x.quadraticCurveTo(mw * .80, mh, mw, mh * .88); x.lineTo(mw, mh); x.closePath(); x.fill();
+    x.globalAlpha = 1;
+
+    /* open-water current bands across the top half */
+    x.strokeStyle = 'rgba(255,255,255,.07)'; x.lineWidth = Math.max(2, u * .05);
+    for (let i = 1; i <= 3; i++) {
+      const y = mh * (.10 + i * .09);
+      x.beginPath(); x.moveTo(0, y);
+      x.bezierCurveTo(mw * .3, y - u * .13, mw * .7, y + u * .13, mw, y); x.stroke();
+    }
+  } else {
+    /* excavation ground: a lighter dig field, trenches, and a rocky strip */
+    x.fillStyle = 'rgba(255,255,255,.07)';
+    x.beginPath(); x.moveTo(mw * .06, mh * .18);
+    x.lineTo(mw * .52, mh * .12); x.lineTo(mw * .60, mh * .74);
+    x.lineTo(mw * .10, mh * .82); x.closePath(); x.fill();
+
+    x.fillStyle = M.sand; x.globalAlpha = .22;
+    x.beginPath(); x.moveTo(mw * .62, mh * .08); x.lineTo(mw, mh * .16);
+    x.lineTo(mw, mh * .92); x.lineTo(mw * .66, mh * .84); x.closePath(); x.fill();
+    x.globalAlpha = 1;
+
+    x.strokeStyle = 'rgba(0,0,0,.16)'; x.lineWidth = Math.max(2, u * .045);
+    for (let i = 0; i < 4; i++) {
+      const y = mh * (.24 + i * .17);
+      x.beginPath(); x.moveTo(mw * .08, y); x.lineTo(mw * .56, y - mh * .04); x.stroke();
+    }
+  }
+
+  /* the dark guide line FLL mats carry, drawn as a plain schematic route:
+     it is here to line-follow along, not to match any published layout */
+  x.strokeStyle = 'rgba(0,0,0,.42)'; x.lineWidth = Math.max(3, u * .09);
+  x.lineCap = 'round'; x.lineJoin = 'round';
+  x.beginPath();
+  x.moveTo(mw * .10, mh * .78);
+  x.lineTo(mw * .30, mh * .78); x.lineTo(mw * .30, mh * .34);
+  x.lineTo(mw * .58, mh * .34); x.lineTo(mw * .58, mh * .70);
+  x.lineTo(mw * .86, mh * .70);
+  x.stroke();
+  x.restore();
+}
+
+/* --------------------------------------------------------- mission models */
+/* Each mission is a small schematic object so the field is readable at a
+   glance. Shapes are drawn in a unit box and scaled, so they stay correct at
+   every zoom level. */
+function modelArt(x, art, cx, cy, w, h, M) {
+  const s = Math.min(w, h);
+  x.save(); x.translate(cx, cy);
+  x.lineJoin = 'round'; x.lineCap = 'round';
+  const stroke = 'rgba(20,28,36,.75)';
+  x.lineWidth = Math.max(1, s * .07);
+
+  const body = (fill) => { x.fillStyle = fill; x.strokeStyle = stroke; };
+
+  switch (art) {
+    case 'coral':
+      body('#FF8A65');
+      [-1, 0, 1].forEach((k, i) => {
+        x.beginPath(); x.moveTo(k * s * .22, h * .42);
+        x.quadraticCurveTo(k * s * .34, 0, k * s * .20 - (i - 1) * s * .06, -h * .40);
+        x.lineWidth = Math.max(2, s * .16); x.strokeStyle = '#FF8A65'; x.stroke();
+      });
+      break;
+    case 'reef':
+      body('#F4A261');
+      [[-.24, .10, .30], [.06, -.06, .38], [.28, .16, .26]].forEach(b => {
+        x.beginPath(); x.arc(b[0] * w, b[1] * h, b[2] * s, 0, 7); x.fill(); x.stroke();
+      });
+      break;
+    case 'shark':
+      body('#78909C');
+      x.beginPath();
+      x.moveTo(-w * .48, 0); x.quadraticCurveTo(-w * .10, -h * .38, w * .30, -h * .10);
+      x.quadraticCurveTo(w * .46, 0, w * .30, h * .10);
+      x.quadraticCurveTo(-w * .10, h * .34, -w * .48, 0); x.closePath(); x.fill(); x.stroke();
+      x.beginPath(); x.moveTo(w * .30, -h * .10); x.lineTo(w * .50, -h * .34);
+      x.lineTo(w * .50, h * .30); x.lineTo(w * .30, h * .10); x.closePath(); x.fill(); x.stroke();
+      x.beginPath(); x.moveTo(-w * .06, -h * .26); x.lineTo(w * .04, -h * .50);
+      x.lineTo(w * .14, -h * .22); x.closePath(); x.fill(); x.stroke();
+      break;
+    case 'fish':
+      body('#FFB74D');
+      x.beginPath(); x.ellipse(0, 0, w * .32, h * .26, 0, 0, 7); x.fill(); x.stroke();
+      x.beginPath(); x.moveTo(w * .30, 0); x.lineTo(w * .50, -h * .26);
+      x.lineTo(w * .50, h * .26); x.closePath(); x.fill(); x.stroke();
+      x.beginPath(); x.moveTo(-w * .18, -h * .24); x.quadraticCurveTo(-w * .34, -h * .56, -w * .04, -h * .48);
+      x.strokeStyle = stroke; x.stroke();
+      x.fillStyle = '#FFF176'; x.beginPath(); x.arc(-w * .04, -h * .50, s * .09, 0, 7); x.fill();
+      break;
+    case 'whale':
+      body('#5C6BC0');
+      x.beginPath(); x.ellipse(-w * .06, 0, w * .38, h * .30, 0, 0, 7); x.fill(); x.stroke();
+      x.beginPath(); x.moveTo(w * .30, 0); x.lineTo(w * .50, -h * .28);
+      x.lineTo(w * .44, 0); x.lineTo(w * .50, h * .28); x.closePath(); x.fill(); x.stroke();
+      break;
+    case 'diver':
+      body('#26A69A');
+      x.beginPath(); x.arc(0, -h * .26, s * .17, 0, 7); x.fill(); x.stroke();
+      x.beginPath(); x.roundRect(-w * .16, -h * .06, w * .32, h * .40, s * .10); x.fill(); x.stroke();
+      x.fillStyle = '#B0BEC5';
+      x.beginPath(); x.roundRect(w * .16, -h * .06, w * .12, h * .30, s * .06); x.fill(); x.stroke();
+      break;
+    case 'sub':
+      body('#EF6C60');
+      x.beginPath(); x.roundRect(-w * .40, -h * .20, w * .74, h * .40, h * .20); x.fill(); x.stroke();
+      x.fillStyle = '#E1F5FE';
+      x.beginPath(); x.arc(-w * .12, 0, s * .11, 0, 7); x.fill(); x.stroke();
+      body('#EF6C60');
+      x.beginPath(); x.roundRect(-w * .06, -h * .42, w * .16, h * .22, s * .05); x.fill(); x.stroke();
+      break;
+    case 'vessel':
+      body('#ECEFF1');
+      x.beginPath(); x.moveTo(-w * .44, h * .06); x.lineTo(w * .44, h * .06);
+      x.lineTo(w * .28, h * .34); x.lineTo(-w * .30, h * .34); x.closePath(); x.fill(); x.stroke();
+      x.beginPath(); x.roundRect(-w * .16, -h * .22, w * .34, h * .28, s * .05); x.fill(); x.stroke();
+      x.beginPath(); x.moveTo(0, -h * .22); x.lineTo(0, -h * .48); x.stroke();
+      break;
+    case 'mast':
+      body('#A1887F');
+      x.beginPath(); x.moveTo(0, h * .46); x.lineTo(0, -h * .46); x.lineWidth = Math.max(2, s * .12);
+      x.strokeStyle = '#8D6E63'; x.stroke();
+      x.fillStyle = '#EF5350'; x.strokeStyle = stroke; x.lineWidth = Math.max(1, s * .07);
+      x.beginPath(); x.moveTo(0, -h * .44); x.lineTo(w * .38, -h * .28);
+      x.lineTo(0, -h * .12); x.closePath(); x.fill(); x.stroke();
+      break;
+    case 'chest':
+      body('#C89A54');
+      x.beginPath(); x.roundRect(-w * .36, -h * .06, w * .72, h * .38, s * .05); x.fill(); x.stroke();
+      x.fillStyle = '#8D6E63';
+      x.beginPath(); x.moveTo(-w * .36, -h * .06);
+      x.quadraticCurveTo(0, -h * .52, w * .36, -h * .06); x.closePath(); x.fill(); x.stroke();
+      x.fillStyle = '#FFD54F';
+      x.beginPath(); x.roundRect(-w * .07, -h * .10, w * .14, h * .20, s * .03); x.fill(); x.stroke();
+      break;
+    case 'habitat':
+      body('#4DB6AC');
+      x.beginPath(); x.arc(0, h * .18, s * .42, Math.PI, 0); x.closePath(); x.fill(); x.stroke();
+      x.fillStyle = '#E0F7FA';
+      x.beginPath(); x.arc(0, h * .18, s * .14, Math.PI, 0); x.closePath(); x.fill(); x.stroke();
+      break;
+    case 'sonar':
+      body('#4FC3F7');
+      x.beginPath(); x.arc(-w * .26, h * .22, s * .12, 0, 7); x.fill(); x.stroke();
+      x.strokeStyle = '#4FC3F7'; x.lineWidth = Math.max(2, s * .09);
+      [.34, .52, .70].forEach(r => { x.beginPath(); x.arc(-w * .26, h * .22, s * r, -1.35, -0.15); x.stroke(); });
+      break;
+    case 'creature':
+      body('#BA68C8');
+      x.beginPath(); x.arc(0, -h * .12, s * .28, Math.PI, 0); x.closePath(); x.fill(); x.stroke();
+      x.strokeStyle = '#BA68C8'; x.lineWidth = Math.max(2, s * .10);
+      [-.22, -.07, .08, .23].forEach(k => {
+        x.beginPath(); x.moveTo(k * w, -h * .10);
+        x.quadraticCurveTo(k * w + s * .10, h * .18, k * w - s * .05, h * .40); x.stroke();
+      });
+      break;
+    case 'lanes':
+      x.strokeStyle = '#FFF176'; x.lineWidth = Math.max(2, s * .12);
+      [-.30, 0, .30].forEach(k => {
+        x.beginPath(); x.moveTo(-w * .26, k * h + h * .10);
+        x.lineTo(0, k * h - h * .12); x.lineTo(w * .26, k * h + h * .10); x.stroke();
+      });
+      break;
+    case 'sample':
+      body('#B0BEC5');
+      x.beginPath(); x.roundRect(-w * .13, -h * .40, w * .26, h * .76, s * .08); x.fill(); x.stroke();
+      x.fillStyle = '#66BB6A';
+      x.beginPath(); x.roundRect(-w * .10, h * .02, w * .20, h * .31, s * .06); x.fill();
+      break;
+    /* ---- excavation set ---- */
+    case 'pillar':
+      body('#E0D6C0');
+      x.beginPath(); x.roundRect(-w * .30, -h * .46, w * .60, h * .12, s * .04); x.fill(); x.stroke();
+      x.beginPath(); x.roundRect(-w * .20, -h * .34, w * .40, h * .62, s * .03); x.fill(); x.stroke();
+      x.beginPath(); x.roundRect(-w * .32, h * .28, w * .64, h * .16, s * .04); x.fill(); x.stroke();
+      break;
+    case 'pot':
+      body('#D08A5A');
+      x.beginPath(); x.moveTo(-w * .12, -h * .40); x.lineTo(w * .12, -h * .40);
+      x.quadraticCurveTo(w * .40, 0, w * .18, h * .40);
+      x.lineTo(-w * .18, h * .40); x.quadraticCurveTo(-w * .40, 0, -w * .12, -h * .40);
+      x.closePath(); x.fill(); x.stroke();
+      break;
+    case 'statue':
+      body('#CFC6B2');
+      x.beginPath(); x.arc(0, -h * .28, s * .15, 0, 7); x.fill(); x.stroke();
+      x.beginPath(); x.moveTo(-w * .20, h * .40); x.lineTo(-w * .10, -h * .12);
+      x.lineTo(w * .10, -h * .12); x.lineTo(w * .20, h * .40); x.closePath(); x.fill(); x.stroke();
+      break;
+    case 'dig':
+      body('#8D6E63');
+      x.beginPath(); x.moveTo(-w * .42, h * .34);
+      x.quadraticCurveTo(0, -h * .32, w * .42, h * .34); x.closePath(); x.fill(); x.stroke();
+      x.strokeStyle = '#455A64'; x.lineWidth = Math.max(2, s * .09);
+      x.beginPath(); x.moveTo(w * .06, -h * .40); x.lineTo(-w * .16, h * .16); x.stroke();
+      break;
+    case 'crate':
+      body('#B98B4E');
+      x.beginPath(); x.roundRect(-w * .34, -h * .30, w * .68, h * .62, s * .05); x.fill(); x.stroke();
+      x.beginPath(); x.moveTo(-w * .34, -h * .30); x.lineTo(w * .34, h * .32);
+      x.moveTo(w * .34, -h * .30); x.lineTo(-w * .34, h * .32); x.stroke();
+      break;
+    case 'fossil':
+      body('#ECEFF1');
+      x.beginPath(); x.ellipse(0, 0, w * .34, h * .24, 0, 0, 7); x.fill(); x.stroke();
+      x.strokeStyle = stroke; x.lineWidth = Math.max(1, s * .06);
+      [-.16, 0, .16].forEach(k => { x.beginPath(); x.moveTo(k * w, -h * .18); x.lineTo(k * w, h * .18); x.stroke(); });
+      break;
+    case 'marker':
+      body('#EF5350');
+      x.beginPath(); x.moveTo(0, h * .44); x.lineTo(0, -h * .40); x.strokeStyle = '#6D4C41';
+      x.lineWidth = Math.max(2, s * .10); x.stroke();
+      x.fillStyle = '#EF5350'; x.strokeStyle = stroke; x.lineWidth = Math.max(1, s * .06);
+      x.beginPath(); x.moveTo(0, -h * .40); x.lineTo(w * .34, -h * .26);
+      x.lineTo(0, -h * .12); x.closePath(); x.fill(); x.stroke();
+      break;
+    case 'wall':
+      body('#C7B79A');
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 2; c++) {
+        const bw = w * .40, bh = h * .22;
+        x.beginPath();
+        x.roundRect(-w * .40 + c * bw + (r % 2 ? bw * .22 : 0), -h * .34 + r * bh, bw * .92, bh * .86, s * .03);
+        x.fill(); x.stroke();
+      }
+      break;
+    default:
+      body(M.sand);
+      x.beginPath(); x.roundRect(-w * .36, -h * .36, w * .72, h * .72, s * .10); x.fill(); x.stroke();
+  }
+  x.restore();
+}
+
 /* ------------------------------------------------------------ mat drawing */
 function drawMatField() {
   const cv = $('field'); const x = cv.getContext('2d');
@@ -5252,6 +5502,8 @@ function drawMatField() {
     x.fillText(L1('出發區', 'Launch'), cmSq(L.x) * u + 6, cmSq(L.y) * u + 6);
   }
 
+  matSurface(x, mw, mh, u, M, matKey);
+
   /* guide grid: one square is one wheel rotation */
   x.strokeStyle = 'rgba(255,255,255,.20)'; x.lineWidth = 1;
   for (let i = 1; i < grid.c; i++) { x.beginPath(); x.moveTo(i * u + .5, 0); x.lineTo(i * u + .5, mh); x.stroke(); }
@@ -5272,26 +5524,35 @@ function drawMatField() {
     for (let i = 1; i < grid.r; i++) x.fillText(i, 3, i * u);
   }
 
-  /* mission models */
+  /* mission models, as schematic objects */
   matModels.forEach(md => {
     const w = cmSq(md.w) * u, h = cmSq(md.h) * u;
     const cx = cmSq(md.x) * u, cy = cmSq(md.y) * u;
-    const bx = cx - w / 2, by = cy - h / 2;
-    x.fillStyle = 'rgba(0,0,0,.28)';
-    x.beginPath(); x.roundRect(bx + 2, by + 3, w, h, 5); x.fill();
-    x.fillStyle = M.sand; x.strokeStyle = matLocked ? 'rgba(0,0,0,.35)' : '#FFCD00';
-    x.lineWidth = matLocked ? 1.5 : 2.5;
-    x.beginPath(); x.roundRect(bx, by, w, h, 5); x.fill(); x.stroke();
-    if (u > 30) {
-      x.fillStyle = '#20303F'; x.textAlign = 'center'; x.textBaseline = 'middle';
-      x.font = '800 ' + Math.max(8, Math.min(15, w * .32)) + 'px system-ui,sans-serif';
-      x.fillText(md.id, cx, cy);
+    /* a soft contact shadow so a model sits on the mat rather than floating */
+    x.fillStyle = 'rgba(0,0,0,.30)';
+    x.beginPath(); x.ellipse(cx, cy + h * .42, w * .38, h * .12, 0, 0, 7); x.fill();
+
+    if (!matLocked) {                     /* show what is grabbable */
+      x.strokeStyle = '#FFCD00'; x.lineWidth = 2; x.setLineDash([4, 3]);
+      x.beginPath(); x.roundRect(cx - w / 2, cy - h / 2, w, h, 5); x.stroke(); x.setLineDash([]);
     }
-    if (u > 95) {                       /* names only once they can be read */
-      x.fillStyle = 'rgba(255,255,255,.85)';
-      x.font = '600 ' + Math.max(9, Math.min(12, u * .10)) + 'px system-ui,sans-serif';
-      x.textBaseline = 'top';
-      x.fillText(L1(md.zh, md.en), cx, by + h + 4);
+    modelArt(x, md.art, cx, cy, w, h, M);
+
+    if (u > 46) {                         /* the number rides just below */
+      const f = Math.max(7, Math.min(12, u * .11));
+      x.font = '800 ' + f + 'px system-ui,sans-serif';
+      x.textAlign = 'center'; x.textBaseline = 'top';
+      x.lineWidth = 3; x.strokeStyle = 'rgba(0,0,0,.55)';
+      x.strokeText(md.id, cx, cy + h * .50);
+      x.fillStyle = '#FFFFFF'; x.fillText(md.id, cx, cy + h * .50);
+    }
+    if (u > 95) {                         /* names only once they can be read */
+      const f = Math.max(8, Math.min(11, u * .085));
+      x.font = '600 ' + f + 'px system-ui,sans-serif';
+      x.lineWidth = 3; x.strokeStyle = 'rgba(0,0,0,.55)';
+      x.strokeText(L1(md.zh, md.en), cx, cy + h * .50 + f + 3);
+      x.fillStyle = 'rgba(255,255,255,.92)';
+      x.fillText(L1(md.zh, md.en), cx, cy + h * .50 + f + 3);
     }
   });
 

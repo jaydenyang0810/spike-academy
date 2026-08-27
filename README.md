@@ -30,6 +30,9 @@ Free Build can swap the practice grid for a SUBMERGED (2024-25) or UNEARTHED
   a route can be counted off in the same unit the movement blocks use.
 - **Draggable start.** The robot begins in the launch area and can be dragged
   anywhere to test one leg of a run.
+- **The field is drawn, not just tinted.** Each mat has its own terrain, a
+  dark guide line to follow, and every mission is a small schematic object -
+  a shark, a submersible, a dig site - so the field reads at a glance.
 - **The models are references, not mechanisms.** Nothing scores and nothing
   collides: this is for rehearsing a path, not simulating a match.
 
