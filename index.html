@@ -325,6 +325,46 @@ body.py-mode .pypane{display:flex}
   background:var(--surface);box-shadow:var(--sh-2);touch-action:none;
 }
 
+
+/* FLL mat controls. The bar floats over the field so the canvas keeps the
+   whole pane, and it only appears in the sandbox where a mat can be chosen. */
+.field-wrap{position:relative}
+/* The bar sits in the flow rather than over the mat: floating it hid the top
+   row of mission models behind the controls. */
+.mat-bar{display:none;gap:6px;align-items:center;flex-wrap:wrap;width:100%}
+.field-wrap.sandbox{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.field-wrap.sandbox .mat-bar{display:flex}
+.field-wrap.sandbox.mat-on #field{max-width:100%;max-height:100%}
+.mat-bar select,.mat-bar button,.mat-imp{
+  font:600 12px system-ui,sans-serif;color:#E8EEF4;
+  background:rgba(16,26,38,.88);border:1px solid rgba(255,255,255,.22);
+  border-radius:8px;padding:5px 9px;cursor:pointer;
+}
+.mat-bar button:hover:not(:disabled),.mat-imp:hover{background:rgba(30,46,64,.95)}
+.mat-bar button:disabled{opacity:.4;cursor:default}
+.mat-bar button.on{background:#FFCD00;color:#1A2431;border-color:#FFCD00}
+.mat-zoom{
+  display:inline-flex;align-items:center;gap:0;
+  background:rgba(16,26,38,.88);border:1px solid rgba(255,255,255,.22);border-radius:8px;
+}
+.mat-zoom button{border:0;background:none;border-radius:0;padding:5px 11px;font-size:15px;line-height:1}
+.mat-zoom #zoomLabel{
+  font:600 11px system-ui,sans-serif;color:#9FB2C4;min-width:44px;text-align:center;
+  border-left:1px solid rgba(255,255,255,.18);border-right:1px solid rgba(255,255,255,.18);padding:5px 0;
+}
+.mat-imp{position:relative;overflow:hidden;display:inline-block}
+.mat-imp input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.mat-help{
+  font:500 11px system-ui,sans-serif;color:#9FB2C4;
+  background:rgba(16,26,38,.78);border-radius:7px;padding:4px 8px;
+}
+/* the mat is dark, so the canvas chrome that suits the white grid is dropped */
+.field-wrap.mat-on #field{background:#0B1520;border-color:rgba(255,255,255,.18)}
+@media (max-width:820px){
+  .mat-help{display:none!important}
+  .mat-bar{top:6px;left:6px;right:6px}
+}
+
 /* hub strip */
 .hub{
   flex-shrink:0;display:flex;align-items:center;gap:14px;
@@ -536,7 +576,26 @@ body.py-mode .pypane{display:flex}
   </div>
 
   <div class="pane-r">
-    <div class="field-wrap"><canvas id="field"></canvas></div>
+    <div class="field-wrap">
+      <div class="mat-bar" id="matBar">
+        <select id="matSel" aria-label="Field">
+          <option value="">練習方格 · Practice grid</option>
+          <option value="submerged">SUBMERGED (2024-25)</option>
+          <option value="unearthed">UNEARTHED (2025-26)</option>
+        </select>
+        <span class="mat-zoom">
+          <button type="button" id="zoomOut" aria-label="Zoom out">&minus;</button>
+          <span id="zoomLabel">100%</span>
+          <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
+        </span>
+        <button type="button" id="matLock">Lock</button>
+        <button type="button" id="matReset">Reset</button>
+        <button type="button" id="matExport">Export</button>
+        <label class="mat-imp" id="matImportL">Import<input type="file" id="matImport" accept="application/json,.json"></label>
+        <span class="mat-help" id="matHelp"></span>
+      </div>
+      <canvas id="field"></canvas>
+    </div>
 
     <div class="hub">
       <div class="hub-face" id="hub-face" aria-label="LED matrix"></div>
@@ -4494,6 +4553,83 @@ const TRACK_CM  = 17.57;         // distance between the two drive wheels
    Kids meet this ratio in Unit 3 and then learn in Unit 7 why the gyro is the
    answer to not having to do this arithmetic at all. */
 const SPIN_DEG_PER_ROT = 360 * CM_PER_SQ / (Math.PI * TRACK_CM);
+
+/* ==========================================================================
+   FLL competition mats
+   --------------------------------------------------------------------------
+   The mat is 2362 x 1143 mm. One grid square is one wheel rotation, which
+   CM_PER_SQ fixes at 27.6 cm, so a mat is 8.56 x 4.14 squares. Everything
+   here is declared in centimetres and converted once, which keeps the mat,
+   the mission models and the robot on a single real-world scale.
+
+   The model positions are ESTIMATES. FIRST's mat artwork is their copyright
+   and is not reproduced here: each mission is drawn as a labelled marker at
+   roughly the right place. Every marker can be dragged and the layout saved,
+   so a team can correct it against the physical mat and keep the result.
+   ========================================================================== */
+const MAT_W_CM = 236.2, MAT_H_CM = 114.3;
+const cmSq = cm => cm / CM_PER_SQ;
+
+/* m(id, name-zh, name-en, x, y, w, h) with x/y the model's centre in cm
+   measured from the top-left corner of the mat. */
+const m = (id, zh, en, x, y, w, h) => ({ id, zh, en, x, y, w: w || 12, h: h || 12 });
+
+const MATS = {
+  submerged: {
+    zh: 'SUBMERGED 深海探索', en: 'SUBMERGED (2024-25)',
+    sea: '#0E4C6B', deep: '#0A3A54', sand: '#C8B489',
+    launch: { x: 0, y: 59.3, w: 55, h: 55 },
+    models: [
+      m('M01','珊瑚苗圃','Coral Nursery',            40,  30, 14, 12),
+      m('M02','鯊魚','Shark',                        95,  20, 13, 10),
+      m('M03','珊瑚礁','Coral Reef',                 60,  70, 16, 12),
+      m('M04','潛水員','Scuba Diver',               120,  55, 10, 12),
+      m('M05','鮟鱇魚','Angler Fish',               150,  25, 12, 10),
+      m('M06','升起桅杆','Raise the Mast',          175,  45, 12, 14),
+      m('M07','海怪的寶藏','Kraken\u2019s Treasure',205,  30, 14, 12),
+      m('M08','人工棲地','Artificial Habitat',      215,  75, 14, 12),
+      m('M09','未知生物','Unknown Creature',        185,  90, 12, 10),
+      m('M10','送出潛水器','Send Over the Submersible',150, 95, 14, 10),
+      m('M11','聲納探索','Sonar Discovery',         115,  90, 12, 10),
+      m('M12','餵食鯨魚','Feed the Whale',           85,  95, 14, 12),
+      m('M13','改變航道','Change Shipping Lanes',    60,  15, 14, 10),
+      m('M14','樣本採集','Sample Collection',        30,  90, 12, 10),
+      m('M15','研究船','Research Vessel',           228,  55, 12, 16)
+    ]
+  },
+  unearthed: {
+    zh: 'UNEARTHED 考古任務', en: 'UNEARTHED (2025-26)',
+    sea: '#8A6A3F', deep: '#6E5230', sand: '#D9C79E',
+    launch: { x: 0, y: 59.3, w: 55, h: 55 },
+    /* Mission numbers are certain; the names on this mat are not ones this
+       tool can vouch for, so they are left as numbers for a team to fill in
+       from the season's rulebook using Export / Import. */
+    models: [
+      m('M01','任務 01','Mission 01',  38,  28, 13, 12),
+      m('M02','任務 02','Mission 02',  70,  18, 12, 10),
+      m('M03','任務 03','Mission 03',  62,  72, 14, 12),
+      m('M04','任務 04','Mission 04',  98,  50, 12, 12),
+      m('M05','任務 05','Mission 05', 126,  22, 12, 10),
+      m('M06','任務 06','Mission 06', 150,  62, 14, 12),
+      m('M07','任務 07','Mission 07', 178,  28, 12, 12),
+      m('M08','任務 08','Mission 08', 200,  70, 14, 12),
+      m('M09','任務 09','Mission 09', 172,  92, 12, 10),
+      m('M10','任務 10','Mission 10', 140,  96, 13, 10),
+      m('M11','任務 11','Mission 11', 108,  90, 12, 10),
+      m('M12','任務 12','Mission 12',  80,  96, 12, 10),
+      m('M13','任務 13','Mission 13',  30,  92, 12, 10),
+      m('M14','任務 14','Mission 14', 224,  32, 12, 12),
+      m('M15','任務 15','Mission 15', 228,  92, 12, 12)
+    ]
+  }
+};
+
+/* Live mat state. matKey is null for the ordinary practice grid. */
+let matKey = null;
+let matModels = [];          // working copy, in cm, draggable
+let matLocked = true;        // models are only draggable when unlocked
+let view = { z: 1, ox: 0, oy: 0, base: 28, fit: 28 };
+
 const REFLECT = { WHITE: 95, YELLOW: 72, RED: 45, GREEN: 42, BLUE: 38, BLACK: 7 };
 const COLOR_NAME = {
   RED: ['紅色', 'red'], BLUE: ['藍色', 'blue'], GREEN: ['綠色', 'green'],
@@ -5044,11 +5180,156 @@ function diagnose(why) {
           '🔁 The task conditions were not met. Read the instruction again.'];
 }
 
+/* ---------------------------------------------------------------- mat view */
+/* In mat mode the canvas fills the pane and the mat is drawn inside it under
+   a pan/zoom transform, so zooming in never makes the canvas outgrow its box.
+   view.base is the scale at which the whole mat fits; view.z multiplies it. */
+function matU() { return view.base * view.z; }
+
+function clampView() {
+  const cv = $('field'); if (!matKey || !cv._w) return;
+  const u = matU(), mw = grid.c * u, mh = grid.r * u;
+  view.ox = mw <= cv._w ? (cv._w - mw) / 2 : Math.min(0, Math.max(cv._w - mw, view.ox));
+  view.oy = mh <= cv._h ? (cv._h - mh) / 2 : Math.min(0, Math.max(cv._h - mh, view.oy));
+}
+
+/* screen point -> grid squares, valid in both modes */
+function toGrid(clientX, clientY) {
+  const cv = $('field'), b = cv.getBoundingClientRect();
+  const px = clientX - b.left, py = clientY - b.top;
+  if (!matKey) { const u = cv._cell || 1; return { c: px / u, r: py / u }; }
+  const u = matU(); return { c: (px - view.ox) / u, r: (py - view.oy) / u };
+}
+
+function zoomAt(factor, px, py) {
+  if (!matKey) return;
+  const cv = $('field'); if (!cv._w) return;
+  if (px === undefined) { px = cv._w / 2; py = cv._h / 2; }
+  const before = matU();
+  const gx = (px - view.ox) / before, gy = (py - view.oy) / before;
+  view.z = Math.min(8, Math.max(1, view.z * factor));
+  const after = matU();
+  view.ox = px - gx * after; view.oy = py - gy * after;
+  clampView(); cv._cell = matU(); drawField(); syncZoomUI();
+}
+
+function syncZoomUI() {
+  const l = $('zoomLabel'); if (l) l.textContent = Math.round(view.z * 100) + '%';
+  const zi = $('zoomIn'), zo = $('zoomOut');
+  if (zi) zi.disabled = view.z >= 7.99;
+  if (zo) zo.disabled = view.z <= 1.001;
+}
+
+/* ------------------------------------------------------------ mat drawing */
+function drawMatField() {
+  const cv = $('field'); const x = cv.getContext('2d');
+  const W = cv._w, H = cv._h, u = matU(), M = MATS[matKey];
+  x.clearRect(0, 0, W, H);
+  x.fillStyle = '#0B1520'; x.fillRect(0, 0, W, H);          // pane behind the mat
+
+  x.save(); x.translate(view.ox, view.oy);
+  const mw = grid.c * u, mh = grid.r * u;
+
+  /* the mat itself */
+  x.fillStyle = M.sea; x.fillRect(0, 0, mw, mh);
+  /* a soft band top and bottom so the mat does not read as one flat colour */
+  const g = x.createLinearGradient(0, 0, 0, mh);
+  g.addColorStop(0, 'rgba(255,255,255,.10)'); g.addColorStop(.5, 'rgba(255,255,255,0)');
+  g.addColorStop(1, 'rgba(0,0,0,.18)');
+  x.fillStyle = g; x.fillRect(0, 0, mw, mh);
+
+  /* launch area */
+  const L = M.launch;
+  x.fillStyle = 'rgba(255,255,255,.14)';
+  x.fillRect(cmSq(L.x) * u, cmSq(L.y) * u, cmSq(L.w) * u, cmSq(L.h) * u);
+  x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = 2; x.setLineDash([8, 6]);
+  x.strokeRect(cmSq(L.x) * u, cmSq(L.y) * u, cmSq(L.w) * u, cmSq(L.h) * u);
+  x.setLineDash([]);
+  if (u > 44) {
+    x.fillStyle = 'rgba(255,255,255,.75)';
+    x.font = '600 ' + Math.max(9, Math.min(13, u * .16)) + 'px system-ui,sans-serif';
+    x.textAlign = 'left'; x.textBaseline = 'top';
+    x.fillText(L1('出發區', 'Launch'), cmSq(L.x) * u + 6, cmSq(L.y) * u + 6);
+  }
+
+  /* guide grid: one square is one wheel rotation */
+  x.strokeStyle = 'rgba(255,255,255,.20)'; x.lineWidth = 1;
+  for (let i = 1; i < grid.c; i++) { x.beginPath(); x.moveTo(i * u + .5, 0); x.lineTo(i * u + .5, mh); x.stroke(); }
+  for (let i = 1; i < grid.r; i++) { x.beginPath(); x.moveTo(0, i * u + .5); x.lineTo(mw, i * u + .5); x.stroke(); }
+  /* half-rotation ticks appear once there is room for them to be useful */
+  if (u > 90) {
+    x.strokeStyle = 'rgba(255,255,255,.10)';
+    for (let i = 0; i < grid.c; i++) { const px = (i + .5) * u; x.beginPath(); x.moveTo(px, 0); x.lineTo(px, mh); x.stroke(); }
+    for (let i = 0; i < grid.r; i++) { const py = (i + .5) * u; x.beginPath(); x.moveTo(0, py); x.lineTo(mw, py); x.stroke(); }
+  }
+  /* rotation numbers along the top and left, so a path can be counted off */
+  if (u > 34) {
+    x.fillStyle = 'rgba(255,255,255,.55)';
+    x.font = '600 ' + Math.max(9, Math.min(12, u * .14)) + 'px system-ui,sans-serif';
+    x.textAlign = 'center'; x.textBaseline = 'top';
+    for (let i = 1; i < grid.c; i++) x.fillText(i, i * u, 3);
+    x.textAlign = 'left'; x.textBaseline = 'middle';
+    for (let i = 1; i < grid.r; i++) x.fillText(i, 3, i * u);
+  }
+
+  /* mission models */
+  matModels.forEach(md => {
+    const w = cmSq(md.w) * u, h = cmSq(md.h) * u;
+    const cx = cmSq(md.x) * u, cy = cmSq(md.y) * u;
+    const bx = cx - w / 2, by = cy - h / 2;
+    x.fillStyle = 'rgba(0,0,0,.28)';
+    x.beginPath(); x.roundRect(bx + 2, by + 3, w, h, 5); x.fill();
+    x.fillStyle = M.sand; x.strokeStyle = matLocked ? 'rgba(0,0,0,.35)' : '#FFCD00';
+    x.lineWidth = matLocked ? 1.5 : 2.5;
+    x.beginPath(); x.roundRect(bx, by, w, h, 5); x.fill(); x.stroke();
+    if (u > 30) {
+      x.fillStyle = '#20303F'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.font = '800 ' + Math.max(8, Math.min(15, w * .32)) + 'px system-ui,sans-serif';
+      x.fillText(md.id, cx, cy);
+    }
+    if (u > 95) {                       /* names only once they can be read */
+      x.fillStyle = 'rgba(255,255,255,.85)';
+      x.font = '600 ' + Math.max(9, Math.min(12, u * .10)) + 'px system-ui,sans-serif';
+      x.textBaseline = 'top';
+      x.fillText(L1(md.zh, md.en), cx, by + h + 4);
+    }
+  });
+
+  /* mat border last, so nothing overlaps it */
+  x.strokeStyle = 'rgba(255,255,255,.7)'; x.lineWidth = 2;
+  x.strokeRect(1, 1, mw - 2, mh - 2);
+
+  robot(x, u);
+  x.restore();
+}
+
 /* ---------------------------------------------------------------- field drawing */
 function fitCanvas() {
   const cv = $('field'), box = cv.parentElement;
   const dpr = window.devicePixelRatio || 1;
   const availW = box.clientWidth - 28, availH = box.clientHeight - 28;
+
+  if (matKey) {
+    /* The mat is wide and short, and gets zoomed. The canvas therefore fills
+       the pane and the mat is drawn inside it, rather than the canvas being
+       sized to the mat and growing past its box on every zoom step. */
+    const bar = $('matBar');
+    const barH = (bar && bar.offsetParent) ? bar.offsetHeight + 10 : 0;
+    const boxW = Math.max(160, availW), boxH = Math.max(120, availH - barH);
+    /* The canvas takes the mat's own proportions rather than the pane's, so at
+       100% the mat fills it exactly instead of sitting in a band of dead space.
+       Zooming past 100% then crops inside this viewport. */
+    const fit = Math.min(boxW / grid.c, boxH / grid.r);
+    const w = Math.round(grid.c * fit), h = Math.round(grid.r * fit);
+    cv.style.width = w + 'px'; cv.style.height = h + 'px';
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    cv.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+    view.fit = fit; view.base = fit;
+    cv._w = w; cv._h = h; cv._cell = matU();
+    clampView();
+    return;
+  }
+
   const cell = Math.max(28, Math.min(availW / grid.c, availH / grid.r));
   const w = Math.round(cell * grid.c), h = Math.round(cell * grid.r);
   cv.style.width = w + 'px'; cv.style.height = h + 'px';
@@ -5059,6 +5340,7 @@ function fitCanvas() {
 
 function drawField() {
   const cv = $('field'); if (!cv._cell) return;
+  if (matKey) { drawMatField(); return; }
   const x = cv.getContext('2d'), u = cv._cell, W = cv._w, H = cv._h;
   x.clearRect(0, 0, W, H);
 
@@ -5402,9 +5684,20 @@ function enterWorkspace() {
   /* step must exist before the toolbox is built for it */
   setTimeout(() => {
     step = lesson().steps[stepIdx];
-    grid = step.grid || { c: G.c, r: G.r };
+    /* A mat belongs to the sandbox only: a lesson's goals and paint are laid
+       out on the practice grid and would be meaningless on a mat. */
+    const wrap = $('field').parentElement;
+    wrap.classList.toggle('sandbox', !!sandbox);
+    if (!sandbox && matKey) { matKey = null; wrap.classList.remove('mat-on'); }
+    grid = matKey ? { c: cmSq(MAT_W_CM), r: cmSq(MAT_H_CM) } : (step.grid || { c: G.c, r: G.r });
+    if (matKey) {
+      matModels = loadMatModels(matKey);
+      const L = MATS[matKey].launch;
+      step.spawn = { c: cmSq(L.x + L.w / 2), r: cmSq(L.y + L.h / 2), a: 90 };
+    }
     ensureWorkspace();
     loadStep();
+    syncMatUI(); syncZoomUI();
   }, 0);
 }
 
@@ -5514,7 +5807,9 @@ function renderSteps() {
 function loadStep() {
   const l = lesson();
   step = l.steps[stepIdx];
-  grid = step.grid || { c: G.c, r: G.r };
+  /* A loaded mat owns the grid; a step's own grid would otherwise clobber it
+     when the sandbox is re-entered with a mat still selected. */
+  grid = matKey ? { c: cmSq(MAT_W_CM), r: cmSq(MAT_H_CM) } : (step.grid || { c: G.c, r: G.r });
 
   renderSteps();
 
@@ -5659,6 +5954,9 @@ function toggleLang() {
   try { localStorage.setItem('spike_lang', lang); } catch (e) {}
   defineBlocks();
   staticUI();
+  /* the mat carries its own text: the help line, and the model names that
+     appear once the zoom is deep enough to read them */
+  syncMatUI(); if (matKey) drawField();
   if (unitId === null) { renderHome(); return; }
 
   const dom = ws ? Blockly.Xml.workspaceToDom(ws) : null;
@@ -5675,6 +5973,192 @@ function toggleLang() {
 }
 
 /* ---------------------------------------------------------------- init */
+/* ---------------------------------------------------------------- mat mode */
+const MAT_STORE = 'spike-fll-mat-v1';
+
+/* Saved corrections are merged over the built-in estimates by id, so a team
+   that has measured three models keeps the estimates for the other twelve. */
+function loadMatModels(key) {
+  const base = MATS[key].models.map(o => Object.assign({}, o));
+  try {
+    const saved = (JSON.parse(localStorage.getItem(MAT_STORE) || '{}') || {})[key];
+    if (Array.isArray(saved)) saved.forEach(sv => {
+      const t = base.find(b => b.id === sv.id); if (!t) return;
+      if (typeof sv.x === 'number') t.x = sv.x;
+      if (typeof sv.y === 'number') t.y = sv.y;
+      if (sv.zh) t.zh = sv.zh; if (sv.en) t.en = sv.en;
+    });
+  } catch (e) { /* a corrupt or blocked store just means the estimates are used */ }
+  return base;
+}
+
+function saveMat() {
+  if (!matKey) return;
+  try {
+    const all = JSON.parse(localStorage.getItem(MAT_STORE) || '{}') || {};
+    all[matKey] = matModels.map(o => ({ id: o.id, x: +o.x.toFixed(1), y: +o.y.toFixed(1), zh: o.zh, en: o.en }));
+    localStorage.setItem(MAT_STORE, JSON.stringify(all));
+  } catch (e) {}
+}
+
+function setMat(key) {
+  if (!step) return;
+  matKey = MATS[key] ? key : null;
+  const wrap = $('field').parentElement;
+  wrap.classList.toggle('mat-on', !!matKey);
+  if (matKey) {
+    grid = { c: cmSq(MAT_W_CM), r: cmSq(MAT_H_CM) };
+    matModels = loadMatModels(matKey);
+    const L = MATS[matKey].launch;
+    step.spawn = { c: cmSq(L.x + L.w / 2), r: cmSq(L.y + L.h / 2), a: 90 };
+  } else {
+    grid = { c: G.c, r: G.r };
+    matModels = [];
+    step.spawn = { c: 1.5, r: 3.5, a: 90 };
+  }
+  view.z = 1; view.ox = 0; view.oy = 0;
+  S = freshState();
+  fitCanvas(); drawField(); drawHub(); syncZoomUI(); syncMatUI();
+}
+
+function syncMatUI() {
+  const on = !!matKey;
+  ['zoomIn', 'zoomOut', 'zoomLabel', 'matLock', 'matExport', 'matReset', 'matImportL', 'matHelp'].forEach(id => {
+    const el = $(id); if (el) el.style.display = on ? '' : 'none';
+  });
+  const lk = $('matLock');
+  if (lk) {
+    lk.textContent = matLocked ? 'Lock' : 'Unlocked';
+    lk.classList.toggle('on', !matLocked);
+  }
+  const h = $('matHelp');
+  if (h) h.textContent = matLocked
+    ? L1('模型位置為估計值，解鎖後可拖曳校正', 'Model positions are estimates. Unlock to drag and correct them.')
+    : L1('拖曳模型到正確位置，會自動儲存', 'Drag a model to its real place. Saved automatically.');
+  const sel = $('matSel'); if (sel) sel.value = matKey || '';
+}
+
+/* Export and import let a corrected layout leave one browser and reach the
+   rest of the team, which localStorage on its own cannot do. */
+function exportMat() {
+  if (!matKey) return;
+  const payload = { mat: matKey, unit: 'cm', origin: 'top-left of mat', models: matModels };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = matKey + '-models.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+function importMat(file) {
+  const fr = new FileReader();
+  fr.onload = () => {
+    try {
+      const d = JSON.parse(fr.result);
+      if (!d || !Array.isArray(d.models)) throw new Error('shape');
+      d.models.forEach(sv => {
+        const t = matModels.find(b => b.id === sv.id); if (!t) return;
+        if (typeof sv.x === 'number') t.x = sv.x;
+        if (typeof sv.y === 'number') t.y = sv.y;
+        if (sv.zh) t.zh = sv.zh; if (sv.en) t.en = sv.en;
+      });
+      saveMat(); drawField();
+    } catch (e) {
+      alert(L1('這個檔案讀不出來。', 'That file could not be read.'));
+    }
+  };
+  fr.readAsText(file);
+}
+
+function resetMat() {
+  if (!matKey) return;
+  try {
+    const all = JSON.parse(localStorage.getItem(MAT_STORE) || '{}') || {};
+    delete all[matKey]; localStorage.setItem(MAT_STORE, JSON.stringify(all));
+  } catch (e) {}
+  matModels = MATS[matKey].models.map(o => Object.assign({}, o));
+  drawField();
+}
+
+/* --------------------------------------------------------- mat interaction */
+function wireMat() {
+  const cv = $('field');
+  let drag = null;
+
+  cv.addEventListener('pointerdown', e => {
+    if (!S) return;
+    const g = toGrid(e.clientX, e.clientY);
+
+    if (matKey && !matLocked) {                       /* a mission model */
+      for (let i = matModels.length - 1; i >= 0; i--) {
+        const md = matModels[i];
+        if (Math.abs(g.c - cmSq(md.x)) <= cmSq(md.w) / 2 &&
+            Math.abs(g.r - cmSq(md.y)) <= cmSq(md.h) / 2) {
+          drag = { kind: 'model', md: md, dc: g.c - cmSq(md.x), dr: g.r - cmSq(md.y) };
+          cv.setPointerCapture(e.pointerId); return;
+        }
+      }
+    }
+    if (Math.hypot(g.c - S.c, g.r - S.r) < (matKey ? 0.6 : 0.7)) {   /* the robot */
+      drag = { kind: 'robot', dc: g.c - S.c, dr: g.r - S.r, moved: 0 };
+      cv.setPointerCapture(e.pointerId); return;
+    }
+    if (matKey) {                                     /* otherwise pan the mat */
+      drag = { kind: 'pan', px: e.clientX, py: e.clientY, ox: view.ox, oy: view.oy };
+      cv.setPointerCapture(e.pointerId);
+    }
+  });
+
+  cv.addEventListener('pointermove', e => {
+    if (!drag) return;
+    if (drag.kind === 'pan') {
+      view.ox = drag.ox + (e.clientX - drag.px);
+      view.oy = drag.oy + (e.clientY - drag.py);
+      clampView(); drawField(); return;
+    }
+    const g = toGrid(e.clientX, e.clientY);
+    if (drag.kind === 'model') {
+      drag.md.x = Math.max(0, Math.min(MAT_W_CM, (g.c - drag.dc) * CM_PER_SQ));
+      drag.md.y = Math.max(0, Math.min(MAT_H_CM, (g.r - drag.dr) * CM_PER_SQ));
+      drawField(); return;
+    }
+    if (drag.kind === 'robot' && matKey) {
+      drag.moved++;
+      S.c = Math.max(HALF_W, Math.min(grid.c - HALF_W, g.c - drag.dc));
+      S.r = Math.max(HALF_H, Math.min(grid.r - HALF_H, g.r - drag.dr));
+      /* freshState reads step.spawn, so a dragged start survives Reset */
+      step.spawn = { c: S.c, r: S.r, a: S.yaw };
+      drawField();
+    }
+  });
+
+  const end = () => {
+    if (!drag) return;
+    /* a press with no movement is still a force-sensor press, as before */
+    if (drag.kind === 'robot' && drag.moved < 3) { S.forceClick = simNow || 1e-6; drawHub(); }
+    if (drag.kind === 'model') saveMat();
+    drag = null;
+  };
+  cv.addEventListener('pointerup', end);
+  cv.addEventListener('pointercancel', end);
+
+  cv.addEventListener('wheel', e => {
+    if (!matKey) return;
+    e.preventDefault();
+    const b = cv.getBoundingClientRect();
+    zoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - b.left, e.clientY - b.top);
+  }, { passive: false });
+
+  const sel = $('matSel');    if (sel) sel.onchange = () => setMat(sel.value);
+  const zi  = $('zoomIn');    if (zi) zi.onclick  = () => zoomAt(1.35);
+  const zo  = $('zoomOut');   if (zo) zo.onclick  = () => zoomAt(1 / 1.35);
+  const lk  = $('matLock');   if (lk) lk.onclick  = () => { matLocked = !matLocked; syncMatUI(); drawField(); };
+  const ex  = $('matExport'); if (ex) ex.onclick  = exportMat;
+  const rs  = $('matReset');  if (rs) rs.onclick  = resetMat;
+  const im  = $('matImport'); if (im) im.onchange = () => { if (im.files[0]) importMat(im.files[0]); im.value = ''; };
+}
+
 function boot() {
   /* hub face + ports */
   const face = $('hub-face');
@@ -5728,12 +6212,8 @@ function boot() {
   });
 
   /* clicking the robot presses the force sensor (port F bumper) */
-  $('field').addEventListener('pointerdown', e => {
-    if (!S) return;
-    const cv = $('field'), b = cv.getBoundingClientRect(), u = cv._cell;
-    const c = (e.clientX - b.left) / u, r = (e.clientY - b.top) / u;
-    if (Math.hypot(c - S.c, r - S.r) < 0.7) { S.forceClick = simNow || 1e-6; drawHub(); }
-  });
+  wireMat();
+
 
   window.addEventListener('resize', () => { if (step) { fitCanvas(); drawField(); } });
 }

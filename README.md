@@ -15,6 +15,29 @@ hardware. 7 units, 21 lessons, 63 tasks, roughly two hours of class time.
   travel: 180 motor degrees is a 90° turn on this robot's geometry.
 - **Live simulation.** One grid square = one wheel rotation = 27.6 cm, which is
   what makes the distance sensor's centimetre readings real.
+- **FLL competition mats** in Free Build. The mat is drawn to scale from its
+  real 2362 x 1143 mm, which is 8.56 x 4.14 wheel rotations, so the robot,
+  the grid and the mission models all share one measurement system.
+
+## The FLL mats
+
+Free Build can swap the practice grid for a SUBMERGED (2024-25) or UNEARTHED
+(2025-26) mat, so a path can be planned without tying up the physical table.
+
+- **Zoom** with the + and - buttons or the scroll wheel, 100% to 800%. The mat
+  opens fully visible and zooms in far enough to read a model; drag to pan.
+- **Guide grid in wheel rotations**, numbered along the top and left edge, so
+  a route can be counted off in the same unit the movement blocks use.
+- **Draggable start.** The robot begins in the launch area and can be dragged
+  anywhere to test one leg of a run.
+- **The models are references, not mechanisms.** Nothing scores and nothing
+  collides: this is for rehearsing a path, not simulating a match.
+
+FIRST's mat artwork is their copyright and is not reproduced. Each mission is
+a labelled marker at an approximate position. Unlock the models with the Lock
+button to drag them to their real places, measured off the physical mat; the
+layout saves to the browser, and Export / Import moves a corrected layout to
+the rest of the team.
 
 Robot configuration is a single constant near the top of the script (`ROBOT`):
 drive motors on ports C and D, attachment motor on E, colour sensor A,
