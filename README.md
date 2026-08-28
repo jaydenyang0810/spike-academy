@@ -28,8 +28,12 @@ Free Build can swap the practice grid for a SUBMERGED (2024-25) or UNEARTHED
   opens fully visible and zooms in far enough to read a model; drag to pan.
 - **Guide grid in wheel rotations**, numbered along the top and left edge, so
   a route can be counted off in the same unit the movement blocks use.
-- **Draggable start.** The robot begins in the launch area and can be dragged
-  anywhere to test one leg of a run.
+- **Draggable start, with a heading.** The robot begins on the square centre
+  nearest the home area and can be dragged anywhere to test one leg of a run.
+  Drag snaps to square centres, alt-drag places it freely, the rotate buttons
+  turn it 45 degrees a click and 15 with shift, and shift-drag aims it at the
+  cursor. Turning re-zeroes the gyro, so a program's turns start from zero
+  whichever way the robot is facing.
 - **The field is drawn, not just tinted.** Each mat has its own terrain, a
   dark guide line to follow, and every mission is a small schematic object -
   a shark, a submersible, a dig site - so the field reads at a glance.

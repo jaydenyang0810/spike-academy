@@ -344,12 +344,12 @@ body.py-mode .pypane{display:flex}
 .mat-bar button:hover:not(:disabled),.mat-imp:hover{background:rgba(30,46,64,.95)}
 .mat-bar button:disabled{opacity:.4;cursor:default}
 .mat-bar button.on{background:#FFCD00;color:#1A2431;border-color:#FFCD00}
-.mat-zoom{
+.mat-zoom,.mat-rot{
   display:inline-flex;align-items:center;gap:0;
   background:rgba(16,26,38,.88);border:1px solid rgba(255,255,255,.22);border-radius:8px;
 }
-.mat-zoom button{border:0;background:none;border-radius:0;padding:5px 11px;font-size:15px;line-height:1}
-.mat-zoom #zoomLabel{
+.mat-zoom button,.mat-rot button{border:0;background:none;border-radius:0;padding:5px 11px;font-size:15px;line-height:1}
+.mat-zoom #zoomLabel,.mat-rot #rotLabel{
   font:600 11px system-ui,sans-serif;color:#9FB2C4;min-width:44px;text-align:center;
   border-left:1px solid rgba(255,255,255,.18);border-right:1px solid rgba(255,255,255,.18);padding:5px 0;
 }
@@ -588,6 +588,11 @@ body.py-mode .pypane{display:flex}
           <button type="button" id="zoomOut" aria-label="Zoom out">&minus;</button>
           <span id="zoomLabel">100%</span>
           <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
+        </span>
+        <span class="mat-rot">
+          <button type="button" id="rotL" aria-label="Turn the robot anticlockwise">&#8634;</button>
+          <span id="rotLabel">90&deg;</span>
+          <button type="button" id="rotR" aria-label="Turn the robot clockwise">&#8635;</button>
         </span>
         <button type="button" id="matLock">Lock</button>
         <button type="button" id="matReset">Reset</button>
@@ -6354,6 +6359,18 @@ function saveMat() {
    that reason; the mat needs the same treatment, or the robot straddles a
    grid line the moment a mat loads and stops reading as one rotation wide.
    Bottom-left square centre, which is comfortably inside the home area. */
+/* Setting the start heading matters as much as the start square: a run that
+   begins facing along the mat is a different program from one facing across
+   it. Turning also re-zeroes the gyro, because freshState zeroes it at the
+   spawn heading and a start heading that did not would read as pre-turned. */
+function rotateRobot(deg) {
+  if (!matKey || !S || !step) return;
+  S.yaw = ((S.yaw + deg) % 360 + 360) % 360;
+  S.yawRef = S.yaw;
+  step.spawn = { c: S.c, r: S.r, a: S.yaw };
+  drawField(); drawHub(); syncMatUI();
+}
+
 function matSpawn() {
   return { c: 0.5, r: Math.floor(cmSq(MAT_H_CM) - 0.5) + 0.5, a: 90 };
 }
@@ -6382,7 +6399,7 @@ function setMat(key) {
 
 function syncMatUI() {
   const on = !!matKey;
-  ['zoomIn', 'zoomOut', 'zoomLabel', 'matLock', 'matExport', 'matReset', 'matImportL', 'matHelp'].forEach(id => {
+  ['zoomIn', 'zoomOut', 'zoomLabel', 'rotL', 'rotR', 'rotLabel', 'matLock', 'matExport', 'matReset', 'matImportL', 'matHelp'].forEach(id => {
     const el = $(id); if (el) el.style.display = on ? '' : 'none';
   });
   const lk = $('matLock');
@@ -6396,6 +6413,8 @@ function syncMatUI() {
     : (canPan()
       ? L1('拖曳可移動視野，方向鍵也可以', 'Drag to move around the field. Arrow keys work too.')
       : L1('模型位置為估計值，解鎖後可拖曳校正', 'Model positions are estimates. Unlock to drag and correct them.'));
+  const rot = $('rotLabel');
+  if (rot && S) rot.textContent = Math.round(S.yaw) + '°';
   const sel = $('matSel'); if (sel) sel.value = matKey || '';
 }
 
@@ -6482,6 +6501,8 @@ function matKeys(e) {
     case 'ArrowDown':  view.oy -= step; break;
     case '+': case '=': zoomAt(1.35); return;
     case '-': case '_': zoomAt(1 / 1.35); return;
+    case '[': rotateRobot(-15); return;
+    case ']': rotateRobot(15); return;
     case '0': setMat(matKey); return;
     default: used = false;
   }
@@ -6539,6 +6560,19 @@ function wireMat() {
     }
     if (drag.kind === 'robot' && matKey) {
       drag.moved++;
+      if (e.shiftKey) {                 /* shift-drag aims it at the cursor */
+        const dc = g.c - S.c, dr = g.r - S.r;
+        if (Math.hypot(dc, dr) > 0.15) {
+          /* the robot's forward vector is (sin a, -cos a), so invert that */
+          const a = Math.round(Math.atan2(dc, -dr) * 180 / Math.PI / 15) * 15;
+          S.yaw = ((a % 360) + 360) % 360;
+          S.yawRef = S.yaw;
+          step.spawn = { c: S.c, r: S.r, a: S.yaw };
+          syncMatUI(); drawHub();
+        }
+        drawField();
+        return;
+      }
       /* snap to square centres so the robot keeps sitting inside one square,
          the way it does on the practice grid; hold Alt to place it freely */
       const snap = v => e.altKey ? v : Math.floor(v) + 0.5;
@@ -6572,6 +6606,8 @@ function wireMat() {
   const sel = $('matSel');    if (sel) sel.onchange = () => setMat(sel.value);
   const zi  = $('zoomIn');    if (zi) zi.onclick  = () => zoomAt(1.35);
   const zo  = $('zoomOut');   if (zo) zo.onclick  = () => zoomAt(1 / 1.35);
+  const rl  = $('rotL');      if (rl) rl.onclick  = e => rotateRobot(e.shiftKey ? -15 : -45);
+  const rr  = $('rotR');      if (rr) rr.onclick  = e => rotateRobot(e.shiftKey ?  15 :  45);
   const lk  = $('matLock');   if (lk) lk.onclick  = () => { matLocked = !matLocked; syncMatUI(); drawField(); matCursor(); };
   const ex  = $('matExport'); if (ex) ex.onclick  = exportMat;
   const rs  = $('matReset');  if (rs) rs.onclick  = resetMat;
