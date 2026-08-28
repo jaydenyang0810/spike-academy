@@ -6041,7 +6041,7 @@ function enterWorkspace() {
     grid = matKey ? { c: cmSq(MAT_W_CM), r: cmSq(MAT_H_CM) } : (step.grid || { c: G.c, r: G.r });
     if (matKey) {
       matModels = loadMatModels(matKey);
-      step.spawn = { c: cmSq(MATS[matKey].home * 0.34), r: cmSq(MAT_H_CM - MATS[matKey].home * 0.34), a: 90 };
+      step.spawn = matSpawn();
     }
     ensureWorkspace();
     loadStep();
@@ -6349,6 +6349,15 @@ function saveMat() {
   } catch (e) {}
 }
 
+/* The robot is 0.70 x 0.60 squares, so it fits inside one square only when it
+   is standing on a square centre. The practice grid spawns at c 1.5 r 3.5 for
+   that reason; the mat needs the same treatment, or the robot straddles a
+   grid line the moment a mat loads and stops reading as one rotation wide.
+   Bottom-left square centre, which is comfortably inside the home area. */
+function matSpawn() {
+  return { c: 0.5, r: Math.floor(cmSq(MAT_H_CM) - 0.5) + 0.5, a: 90 };
+}
+
 function setMat(key) {
   if (!step) return;
   matKey = MATS[key] ? key : null;
@@ -6360,7 +6369,7 @@ function setMat(key) {
   if (matKey) {
     grid = { c: cmSq(MAT_W_CM), r: cmSq(MAT_H_CM) };
     matModels = loadMatModels(matKey);
-    step.spawn = { c: cmSq(MATS[matKey].home * 0.34), r: cmSq(MAT_H_CM - MATS[matKey].home * 0.34), a: 90 };
+    step.spawn = matSpawn();
   } else {
     grid = { c: G.c, r: G.r };
     matModels = [];
@@ -6530,8 +6539,11 @@ function wireMat() {
     }
     if (drag.kind === 'robot' && matKey) {
       drag.moved++;
-      S.c = Math.max(HALF_W, Math.min(grid.c - HALF_W, g.c - drag.dc));
-      S.r = Math.max(HALF_H, Math.min(grid.r - HALF_H, g.r - drag.dr));
+      /* snap to square centres so the robot keeps sitting inside one square,
+         the way it does on the practice grid; hold Alt to place it freely */
+      const snap = v => e.altKey ? v : Math.floor(v) + 0.5;
+      S.c = Math.max(HALF_W, Math.min(grid.c - HALF_W, snap(g.c - drag.dc)));
+      S.r = Math.max(HALF_H, Math.min(grid.r - HALF_H, snap(g.r - drag.dr)));
       /* freshState reads step.spawn, so a dragged start survives Reset */
       step.spawn = { c: S.c, r: S.r, a: S.yaw };
       drawField();
