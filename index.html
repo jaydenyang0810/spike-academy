@@ -332,7 +332,7 @@ body.py-mode .pypane{display:flex}
 
 /* ---- right: field + hub + run bar ---- */
 .pane-r{display:flex;flex-direction:column;background:var(--ground);overflow:hidden;min-width:0}
-.field-wrap{flex:1;min-height:0;display:grid;place-items:center;padding:14px}
+.field-wrap{flex:1;min-height:120px;display:grid;place-items:center;padding:14px}
 #field{
   display:block;max-width:100%;max-height:100%;
   border-radius:var(--r-md);border:1px solid var(--line-2);
@@ -5762,15 +5762,26 @@ function drawMatField() {
 function fitCanvas() {
   const cv = $('field'), box = cv.parentElement;
   const dpr = window.devicePixelRatio || 1;
-  const availW = box.clientWidth - 28, availH = box.clientHeight - 28;
+  /* The mat bar sits in the flow above the canvas, so the height it occupies
+     is not available to the canvas. Both branches have to subtract it: the
+     practice grid did not, and in a short pane that made the canvas taller
+     than its box, where max-height squashed it and the squares stopped being
+     square. The bar also wraps to two lines when narrow, which is why the
+     distortion changed with the window size. */
+  const bar = $('matBar');
+  const barH = (bar && bar.offsetParent) ? bar.offsetHeight + 8 : 0;
+  /* Whatever is genuinely left, and no minimum: any floor above the real
+     space makes the canvas bigger than its box, and max-width / max-height
+     then shrink width and height independently, which is what bent the
+     squares out of shape. A small field is fine; a distorted one is not. */
+  const availW = Math.max(1, box.clientWidth - 28);
+  const availH = Math.max(1, box.clientHeight - 28 - barH);
 
   if (matKey) {
     /* The mat is wide and short, and gets zoomed. The canvas therefore fills
        the pane and the mat is drawn inside it, rather than the canvas being
        sized to the mat and growing past its box on every zoom step. */
-    const bar = $('matBar');
-    const barH = (bar && bar.offsetParent) ? bar.offsetHeight + 10 : 0;
-    const boxW = Math.max(160, availW), boxH = Math.max(120, availH - barH);
+    const boxW = availW, boxH = availH;
     /* The canvas takes the mat's own proportions rather than the pane's, so at
        100% the mat fills it exactly instead of sitting in a band of dead space.
        Zooming past 100% then crops inside this viewport. */
@@ -5785,7 +5796,7 @@ function fitCanvas() {
     return;
   }
 
-  const cell = Math.max(28, Math.min(availW / grid.c, availH / grid.r));
+  const cell = Math.max(1, Math.min(availW / grid.c, availH / grid.r));
   const w = Math.round(cell * grid.c), h = Math.round(cell * grid.r);
   cv.style.width = w + 'px'; cv.style.height = h + 'px';
   cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
