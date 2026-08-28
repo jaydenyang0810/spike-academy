@@ -608,8 +608,8 @@ body.py-mode .pypane{display:flex}
           <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
         </span>
         <select id="wheelSel" aria-label="Wheel size">
-          <option value="88">88mm 輪 · wheel</option>
           <option value="56">56mm 輪 · wheel</option>
+          <option value="88">88mm 輪 · wheel</option>
         </select>
         <span class="mat-rot">
           <button type="button" id="rotL" aria-label="Turn the robot anticlockwise">&#8634;</button>
@@ -4574,8 +4574,14 @@ const WALL_PAD = 0.36;                         // a shade over HALF_W, for colli
    covers 17.6. A grid square is one rotation, so the smaller wheel puts more,
    finer squares on a mat of fixed size, and the robot, which is defined in
    squares so that it fits inside one, comes out smaller with it. */
-let WHEEL_MM = 88;
-let CM_PER_SQ = Math.PI * WHEEL_MM / 10;   // 27.6 cm
+/* The lessons were written and checked against the 88 mm wheel, so the
+   practice grid keeps it: every distance the colour and distance sensors
+   report in those lessons assumes a 27.6 cm square, and moving it would
+   quietly change what the tasks ask for. A mat is a real table being planned
+   against, so it uses whichever wheel the team actually drives on. */
+const WHEEL_PRACTICE_MM = 88;
+let WHEEL_MM = 56;                         // the wheel used on a mat
+let CM_PER_SQ = Math.PI * WHEEL_PRACTICE_MM / 10;
 const TRACK_CM  = 17.57;         // distance between the two drive wheels
 
 /* TRUE MOTOR-DEGREE SEMANTICS, as in the real SPIKE app.
@@ -4588,17 +4594,19 @@ const TRACK_CM  = 17.57;         // distance between the two drive wheels
    answer to not having to do this arithmetic at all. */
 let SPIN_DEG_PER_ROT = 360 * CM_PER_SQ / (Math.PI * TRACK_CM);
 
-/* Changing the wheel re-derives both, then makes every measured thing on
-   screen recompute: the mat's size in squares, the fit, and the readouts. */
-function setWheel(mm) {
-  WHEEL_MM = (mm === 56 ? 56 : 88);
-  CM_PER_SQ = Math.PI * WHEEL_MM / 10;
+/* The scale in force depends on where we are: the practice grid is pinned to
+   the wheel the lessons were written for, a mat follows the chosen one. */
+function applyScale() {
+  const mm = matKey ? WHEEL_MM : WHEEL_PRACTICE_MM;
+  CM_PER_SQ = Math.PI * mm / 10;
   SPIN_DEG_PER_ROT = 360 * CM_PER_SQ / (Math.PI * TRACK_CM);
+}
+
+function setWheel(mm) {
+  WHEEL_MM = (mm === 88 ? 88 : 56);
   try { localStorage.setItem('spike-wheel', String(WHEEL_MM)); } catch (e) {}
   const sel = $('wheelSel'); if (sel) sel.value = String(WHEEL_MM);
-  if (matKey) setMat(matKey);              /* re-derives grid, spawn and fit */
-  else if (step) { fitCanvas(); drawField(); }
-  if (typeof drawHub === 'function' && S) drawHub();
+  if (matKey) setMat(matKey);              /* re-derives scale, grid and spawn */
 }
 
 /* ==========================================================================
@@ -6155,6 +6163,7 @@ function enterWorkspace() {
     const wrap = $('field').parentElement;
     wrap.classList.toggle('sandbox', !!sandbox);
     if (!sandbox && matKey) { matKey = null; wrap.classList.remove('mat-on'); }
+    applyScale();
     grid = matKey ? { c: cmSq(MAT_W_CM), r: cmSq(MAT_H_CM) } : (step.grid || { c: G.c, r: G.r });
     if (matKey) {
       matModels = loadMatModels(matKey);
@@ -6274,6 +6283,7 @@ function loadStep() {
   step = l.steps[stepIdx];
   /* A loaded mat owns the grid; a step's own grid would otherwise clobber it
      when the sandbox is re-entered with a mat still selected. */
+  applyScale();
   grid = matKey ? { c: cmSq(MAT_W_CM), r: cmSq(MAT_H_CM) } : (step.grid || { c: G.c, r: G.r });
 
   renderSteps();
@@ -6495,6 +6505,7 @@ function setMat(key) {
   /* focusable only in mat mode, so the arrow keys have somewhere to land */
   if (matKey) $('field').setAttribute('tabindex', '0');
   else $('field').removeAttribute('tabindex');
+  applyScale();
   if (matKey) {
     grid = { c: cmSq(MAT_W_CM), r: cmSq(MAT_H_CM) };
     matModels = loadMatModels(matKey);

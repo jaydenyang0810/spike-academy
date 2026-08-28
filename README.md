@@ -13,10 +13,11 @@ hardware. 7 units, 21 lessons, 63 tasks, roughly two hours of class time.
 - **One language on screen at a time**, switched by the button in the header.
 - **Real SPIKE semantics.** Movement blocks carry motor travel, not robot
   travel: 180 motor degrees is a 90° turn on this robot's geometry.
-- **Live simulation.** One grid square is one wheel rotation. SPIKE Prime
-  ships two drive wheels and the picker in Free Build switches between them:
-  88 mm covers 27.6 cm a rotation, 56 mm covers 17.6. That constant is what
-  makes the distance sensor's centimetre readings real.
+- **Live simulation.** One grid square is one wheel rotation, which is what
+  makes the distance sensor's centimetre readings real. The lessons are pinned
+  to the 88 mm wheel they were written for, at 27.6 cm a square. A mat follows
+  the wheel picked in Free Build, defaulting to 56 mm at 17.6 cm, since that is
+  the wheel most teams drive on.
 - **Adjustable split.** The divider between the code and the field can be
   dragged, double-clicked to reset, or moved with the arrow keys, and the
   field redraws as it moves.
@@ -44,6 +45,11 @@ Free Build can swap the practice grid for a SUBMERGED (2024-25) or UNEARTHED
   a shark, a submersible, a dig site - so the field reads at a glance.
 - **The models are references, not mechanisms.** Nothing scores and nothing
   collides: this is for rehearsing a path, not simulating a match.
+
+On the 56 mm wheel a mat is 13.4 by 6.5 squares; on 88 mm it is 8.5 by 4.1.
+The robot is declared in squares so that it fits inside one, so it is drawn
+smaller on the smaller wheel. A real robot does not shrink when its wheels do,
+so treat the 88 mm view as the one that is true to the robot's own size.
 
 Mission numbers, names and positions come from FIRST's own Field Setup Guide
 for each season: the positions are read off the numbered callouts in its field
