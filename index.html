@@ -4570,56 +4570,65 @@ const SPIN_DEG_PER_ROT = 360 * CM_PER_SQ / (Math.PI * TRACK_CM);
 const MAT_W_CM = 236.2, MAT_H_CM = 114.3;
 const cmSq = cm => cm / CM_PER_SQ;
 
-/* m(id, name-zh, name-en, x, y, w, h) with x/y the model's centre in cm
-   measured from the top-left corner of the mat. */
-const m = (id, zh, en, x, y, w, h, art) => ({ id, zh, en, x, y, w: w || 12, h: h || 12, art: art || 'box' });
+/* m(id, zh, en, x, y, w, h, art, lab)
+   x/y is the model's centre in cm from the top-left corner of the mat.
+   Positions are read off the callout labels in FIRST's official Field Setup
+   Guide overview, normalised against the mat edges in that photograph. They
+   are close, not surveyed: a callout sits near its model, not exactly on it.
+   `lab` is the number shown when one mission has several sites. */
+const m = (id, zh, en, x, y, w, h, art, lab) =>
+  ({ id, zh, en, x, y, w: w || 12, h: h || 12, art: art || 'box', lab: lab || id });
 
 const MATS = {
   submerged: {
     zh: 'SUBMERGED 深海探索', en: 'SUBMERGED (2024-25)',
     sea: '#0E4C6B', deep: '#0A3A54', sand: '#C8B489',
-    launch: { x: 0, y: 59.3, w: 55, h: 55 },
+    home: 56,
     models: [
-      m('M01','珊瑚苗圃','Coral Nursery',            40,  30, 14, 12, 'coral'),
-      m('M02','鯊魚','Shark',                        95,  20, 13, 10, 'shark'),
-      m('M03','珊瑚礁','Coral Reef',                 68,  70, 16, 12, 'reef'),
-      m('M04','潛水員','Scuba Diver',               120,  55, 10, 12, 'diver'),
-      m('M05','鮟鱇魚','Angler Fish',               150,  25, 12, 10, 'fish'),
-      m('M06','升起桅杆','Raise the Mast',          175,  45, 12, 14, 'mast'),
-      m('M07','海怪的寶藏','Kraken\u2019s Treasure',205,  30, 14, 12, 'chest'),
-      m('M08','人工棲地','Artificial Habitat',      215,  75, 14, 12, 'habitat'),
-      m('M09','未知生物','Unknown Creature',        185,  90, 12, 10, 'creature'),
-      m('M10','送出潛水器','Send Over the Submersible',150, 95, 14, 10, 'sub'),
-      m('M11','聲納探索','Sonar Discovery',         115,  90, 12, 10, 'sonar'),
-      m('M12','餵食鯨魚','Feed the Whale',           85,  95, 14, 12, 'whale'),
-      m('M13','改變航道','Change Shipping Lanes',    60,  15, 14, 10, 'lanes'),
-      m('M14','樣本採集','Sample Collection',        88,  45, 12, 10, 'sample'),
-      m('M15','研究船','Research Vessel',           228,  55, 12, 16, 'vessel')
+      m('M01','珊瑚苗圃','Coral Nursery',              13,  46, 14, 12, 'coral'),
+      m('M02','鯊魚','Shark',                          15,  11, 13, 10, 'shark'),
+      m('M03','珊瑚礁','Coral Reef',                   75,  11, 15, 12, 'reef'),
+      m('M04','潛水員','Scuba Diver',                  14,  30, 10, 13, 'diver'),
+      m('M05','鮟鱇魚','Angler Fish',                 121,  54, 13, 10, 'fish'),
+      m('M06','升起桅杆','Raise the Mast',             78,  43, 12, 14, 'mast'),
+      m('M07','海怪的寶藏','Kraken’s Treasure',   73,  60, 14, 11, 'chest'),
+      m('M08','人工棲地','Artificial Habitat',        147,  96, 14, 12, 'habitat'),
+      m('M09','意外的相遇','Unexpected Encounter',    148,  69, 12, 11, 'creature'),
+      m('M10','送出潛水器','Send Over the Submersible',126, 11, 15, 10, 'sub'),
+      m('M11','聲納探索','Sonar Discovery',           179,  15, 13, 11, 'sonar'),
+      m('M12','餵食鯨魚','Feed the Whale',            225,  11, 14, 11, 'whale'),
+      m('M13','改變航道','Change Shipping Lanes',     213,  51, 13, 11, 'lanes'),
+      /* Sample Collection has three sample sites on the mat */
+      m('M14a','樣本採集','Sample Collection',        111,  11, 10,  9, 'sample', 'M14'),
+      m('M14b','樣本採集','Sample Collection',         53,  36, 10,  9, 'sample', 'M14'),
+      m('M14c','樣本採集','Sample Collection',        223,  33, 10,  9, 'sample', 'M14'),
+      m('M15','研究船','Research Vessel',              69, 103, 13, 13, 'vessel')
     ]
   },
   unearthed: {
     zh: 'UNEARTHED 考古任務', en: 'UNEARTHED (2025-26)',
     sea: '#8A6A3F', deep: '#6E5230', sand: '#D9C79E',
-    launch: { x: 0, y: 59.3, w: 55, h: 55 },
-    /* Mission numbers are certain; the names on this mat are not ones this
-       tool can vouch for, so they are left as numbers for a team to fill in
-       from the season's rulebook using Export / Import. */
+    home: 56,
     models: [
-      m('M01','任務 01','Mission 01',  38,  28, 13, 12, 'pillar'),
-      m('M02','任務 02','Mission 02',  70,  18, 12, 10, 'pot'),
-      m('M03','任務 03','Mission 03',  62,  72, 14, 12, 'statue'),
-      m('M04','任務 04','Mission 04',  98,  50, 12, 12, 'dig'),
-      m('M05','任務 05','Mission 05', 126,  22, 12, 10, 'crate'),
-      m('M06','任務 06','Mission 06', 150,  62, 14, 12, 'fossil'),
-      m('M07','任務 07','Mission 07', 178,  28, 12, 12, 'marker'),
-      m('M08','任務 08','Mission 08', 200,  70, 14, 12, 'wall'),
-      m('M09','任務 09','Mission 09', 172,  92, 12, 10, 'pillar'),
-      m('M10','任務 10','Mission 10', 140,  96, 13, 10, 'pot'),
-      m('M11','任務 11','Mission 11', 108,  90, 12, 10, 'dig'),
-      m('M12','任務 12','Mission 12',  80,  96, 12, 10, 'crate'),
-      m('M13','任務 13','Mission 13',  52,  44, 12, 10, 'statue'),
-      m('M14','任務 14','Mission 14', 224,  32, 12, 12, 'fossil'),
-      m('M15','任務 15','Mission 15', 228,  92, 12, 12, 'marker')
+      m('M01','表層清理','Surface Brushing',           14,  47, 13, 12, 'brush'),
+      m('M02','揭開地圖','Map Reveal',                 23,  15, 14, 11, 'map'),
+      m('M03','礦坑探索','Mineshaft Explorer',         78,  11, 14, 11, 'minecart'),
+      m('M04','小心修復','Careful Recovery',           69,  23, 11, 13, 'pot'),
+      m('M05','誰住在這裡？','Who Lived Here?',       189,  12, 11, 13, 'statue'),
+      m('M06','鍛造爐','Forge',                       205,  25, 13, 12, 'forge'),
+      m('M07','重物吊升','Heavy Lifting',             221,  13, 13, 12, 'crate'),
+      m('M08','穀倉','Silo',                          220,  47, 11, 15, 'silo'),
+      m('M09','市集','What’s on Sale?',          165,  50, 14, 12, 'stall'),
+      m('M10','天秤','Tip the Scales',                143,  56, 14, 12, 'scales'),
+      m('M11','釣起文物','Angler Artifacts',          142, 100, 12, 12, 'fossil'),
+      m('M12','打撈行動','Salvage Operation',         107, 100, 13, 12, 'crate'),
+      m('M13','重建雕像','Statue Rebuild',            101,  49, 11, 14, 'statue'),
+      m('M14','古羅馬廣場','Forum',                    80,  54, 16, 12, 'forum'),
+      /* Site Marking: flags start in a home area and are placed at these
+         sites, marked on the mat itself rather than by a model */
+      m('M15a','標記地點','Site Marking',             150,  11, 10, 10, 'marker', 'M15'),
+      m('M15b','標記地點','Site Marking',              47,  32, 10, 10, 'marker', 'M15'),
+      m('M15c','標記地點','Site Marking',              92, 104, 10, 10, 'marker', 'M15')
     ]
   }
 };
@@ -5407,6 +5416,83 @@ function modelArt(x, art, cx, cy, w, h, M) {
       x.fillStyle = '#66BB6A';
       x.beginPath(); x.roundRect(-w * .10, h * .02, w * .20, h * .31, s * .06); x.fill();
       break;
+    case 'brush':
+      body('#8D6E63');
+      x.beginPath(); x.roundRect(-w * .30, -h * .40, w * .60, h * .34, s * .06); x.fill(); x.stroke();
+      x.strokeStyle = '#455A64'; x.lineWidth = Math.max(2, s * .10);
+      for (let k = -2; k <= 2; k++) {
+        x.beginPath(); x.moveTo(k * w * .11, -h * .06); x.lineTo(k * w * .11, h * .36); x.stroke();
+      }
+      break;
+    case 'map':
+      body('#EFE2C0');
+      x.beginPath();
+      x.moveTo(-w * .40, -h * .30); x.lineTo(-w * .04, -h * .38); x.lineTo(w * .34, -h * .26);
+      x.lineTo(w * .40, h * .34); x.lineTo(w * .02, h * .40); x.lineTo(-w * .36, h * .28);
+      x.closePath(); x.fill(); x.stroke();
+      x.strokeStyle = '#C0392B'; x.lineWidth = Math.max(1.5, s * .07);
+      x.beginPath(); x.moveTo(-w * .22, h * .16); x.lineTo(-w * .02, -h * .10);
+      x.lineTo(w * .16, h * .04); x.stroke();
+      x.beginPath(); x.moveTo(w * .08, -h * .04); x.lineTo(w * .24, -h * .20);
+      x.moveTo(w * .24, -h * .04); x.lineTo(w * .08, -h * .20); x.stroke();
+      break;
+    case 'minecart':
+      body('#78909C');
+      x.beginPath(); x.moveTo(-w * .34, -h * .18); x.lineTo(w * .34, -h * .18);
+      x.lineTo(w * .24, h * .18); x.lineTo(-w * .24, h * .18); x.closePath(); x.fill(); x.stroke();
+      x.fillStyle = '#5D4037';
+      x.beginPath(); x.arc(-w * .15, h * .30, s * .11, 0, 7); x.fill(); x.stroke();
+      x.beginPath(); x.arc(w * .15, h * .30, s * .11, 0, 7); x.fill(); x.stroke();
+      x.strokeStyle = '#455A64'; x.lineWidth = Math.max(2, s * .07);
+      x.beginPath(); x.moveTo(-w * .44, h * .44); x.lineTo(w * .44, h * .44); x.stroke();
+      break;
+    case 'forge':
+      body('#546E7A');
+      /* anvil */
+      x.beginPath();
+      x.moveTo(-w * .34, -h * .14); x.lineTo(w * .34, -h * .14); x.lineTo(w * .18, h * .02);
+      x.lineTo(w * .10, h * .28); x.lineTo(-w * .10, h * .28); x.lineTo(-w * .18, h * .02);
+      x.closePath(); x.fill(); x.stroke();
+      x.fillStyle = '#FF7043';
+      x.beginPath(); x.ellipse(0, -h * .30, w * .18, h * .10, 0, 0, 7); x.fill();
+      break;
+    case 'silo':
+      body('#CFC6B2');
+      x.beginPath(); x.roundRect(-w * .24, -h * .18, w * .48, h * .60, s * .05); x.fill(); x.stroke();
+      x.fillStyle = '#8D6E63';
+      x.beginPath(); x.moveTo(-w * .30, -h * .18); x.lineTo(0, -h * .46);
+      x.lineTo(w * .30, -h * .18); x.closePath(); x.fill(); x.stroke();
+      break;
+    case 'stall':
+      body('#A1887F');
+      x.beginPath(); x.roundRect(-w * .34, -h * .04, w * .68, h * .38, s * .04); x.fill(); x.stroke();
+      /* awning */
+      for (let k = 0; k < 4; k++) {
+        x.fillStyle = k % 2 ? '#EF5350' : '#FAFAFA';
+        x.beginPath();
+        x.roundRect(-w * .40 + k * w * .20, -h * .34, w * .20, h * .30, s * .03);
+        x.fill(); x.stroke();
+      }
+      break;
+    case 'scales':
+      body('#B0A16B');
+      x.strokeStyle = '#6D4C41'; x.lineWidth = Math.max(2, s * .09);
+      x.beginPath(); x.moveTo(0, h * .40); x.lineTo(0, -h * .34); x.stroke();
+      x.beginPath(); x.moveTo(-w * .36, -h * .26); x.lineTo(w * .36, -h * .18); x.stroke();
+      x.fillStyle = '#B0A16B'; x.strokeStyle = stroke; x.lineWidth = Math.max(1, s * .06);
+      x.beginPath(); x.arc(-w * .34, -h * .18, s * .15, 0, Math.PI); x.fill(); x.stroke();
+      x.beginPath(); x.arc(w * .34, -h * .10, s * .15, 0, Math.PI); x.fill(); x.stroke();
+      break;
+    case 'forum':
+      body('#E0D6C0');
+      x.beginPath(); x.roundRect(-w * .46, h * .24, w * .92, h * .16, s * .03); x.fill(); x.stroke();
+      for (let k = -1; k <= 1; k++) {
+        x.beginPath(); x.roundRect(k * w * .30 - w * .07, -h * .22, w * .14, h * .46, s * .03);
+        x.fill(); x.stroke();
+      }
+      x.beginPath(); x.moveTo(-w * .46, -h * .22); x.lineTo(0, -h * .44);
+      x.lineTo(w * .46, -h * .22); x.closePath(); x.fill(); x.stroke();
+      break;
     /* ---- excavation set ---- */
     case 'pillar':
       body('#E0D6C0');
@@ -5488,18 +5574,19 @@ function drawMatField() {
   g.addColorStop(1, 'rgba(0,0,0,.18)');
   x.fillStyle = g; x.fillRect(0, 0, mw, mh);
 
-  /* launch area */
-  const L = M.launch;
-  x.fillStyle = 'rgba(255,255,255,.14)';
-  x.fillRect(cmSq(L.x) * u, cmSq(L.y) * u, cmSq(L.w) * u, cmSq(L.h) * u);
-  x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = 2; x.setLineDash([8, 6]);
-  x.strokeRect(cmSq(L.x) * u, cmSq(L.y) * u, cmSq(L.w) * u, cmSq(L.h) * u);
-  x.setLineDash([]);
+  /* home areas: a quarter circle in each bottom corner, as on the real field */
+  const R = cmSq(M.home) * u;
+  x.fillStyle = 'rgba(255,255,255,.16)';
+  x.strokeStyle = 'rgba(255,255,255,.60)'; x.lineWidth = 2;
+  x.beginPath(); x.moveTo(0, mh); x.arc(0, mh, R, -Math.PI / 2, 0); x.closePath();
+  x.fill(); x.stroke();
+  x.beginPath(); x.moveTo(mw, mh); x.arc(mw, mh, R, Math.PI, -Math.PI / 2); x.closePath();
+  x.fill(); x.stroke();
   if (u > 44) {
-    x.fillStyle = 'rgba(255,255,255,.75)';
-    x.font = '600 ' + Math.max(9, Math.min(13, u * .16)) + 'px system-ui,sans-serif';
-    x.textAlign = 'left'; x.textBaseline = 'top';
-    x.fillText(L1('出發區', 'Launch'), cmSq(L.x) * u + 6, cmSq(L.y) * u + 6);
+    x.fillStyle = 'rgba(255,255,255,.80)';
+    x.font = '600 ' + Math.max(9, Math.min(13, u * .15)) + 'px system-ui,sans-serif';
+    x.textAlign = 'left'; x.textBaseline = 'bottom';
+    x.fillText(L1('出發區', 'Home'), 8, mh - 8);
   }
 
   matSurface(x, mw, mh, u, M, matKey);
@@ -5543,8 +5630,8 @@ function drawMatField() {
       x.font = '800 ' + f + 'px system-ui,sans-serif';
       x.textAlign = 'center'; x.textBaseline = 'top';
       x.lineWidth = 3; x.strokeStyle = 'rgba(0,0,0,.55)';
-      x.strokeText(md.id, cx, cy + h * .50);
-      x.fillStyle = '#FFFFFF'; x.fillText(md.id, cx, cy + h * .50);
+      x.strokeText(md.lab, cx, cy + h * .50);
+      x.fillStyle = '#FFFFFF'; x.fillText(md.lab, cx, cy + h * .50);
     }
     if (u > 95) {                         /* names only once they can be read */
       const f = Math.max(8, Math.min(11, u * .085));
@@ -5953,8 +6040,7 @@ function enterWorkspace() {
     grid = matKey ? { c: cmSq(MAT_W_CM), r: cmSq(MAT_H_CM) } : (step.grid || { c: G.c, r: G.r });
     if (matKey) {
       matModels = loadMatModels(matKey);
-      const L = MATS[matKey].launch;
-      step.spawn = { c: cmSq(L.x + L.w / 2), r: cmSq(L.y + L.h / 2), a: 90 };
+      step.spawn = { c: cmSq(MATS[matKey].home * 0.34), r: cmSq(MAT_H_CM - MATS[matKey].home * 0.34), a: 90 };
     }
     ensureWorkspace();
     loadStep();
@@ -6270,8 +6356,7 @@ function setMat(key) {
   if (matKey) {
     grid = { c: cmSq(MAT_W_CM), r: cmSq(MAT_H_CM) };
     matModels = loadMatModels(matKey);
-    const L = MATS[matKey].launch;
-    step.spawn = { c: cmSq(L.x + L.w / 2), r: cmSq(L.y + L.h / 2), a: 90 };
+    step.spawn = { c: cmSq(MATS[matKey].home * 0.34), r: cmSq(MAT_H_CM - MATS[matKey].home * 0.34), a: 90 };
   } else {
     grid = { c: G.c, r: G.r };
     matModels = [];

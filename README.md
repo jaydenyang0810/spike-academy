@@ -36,11 +36,17 @@ Free Build can swap the practice grid for a SUBMERGED (2024-25) or UNEARTHED
 - **The models are references, not mechanisms.** Nothing scores and nothing
   collides: this is for rehearsing a path, not simulating a match.
 
-FIRST's mat artwork is their copyright and is not reproduced. Each mission is
-a labelled marker at an approximate position. Unlock the models with the Lock
-button to drag them to their real places, measured off the physical mat; the
-layout saves to the browser, and Export / Import moves a corrected layout to
-the rest of the team.
+Mission numbers, names and positions come from FIRST's own Field Setup Guide
+for each season: the positions are read off the numbered callouts in its field
+overview and normalised against the mat edges, so the layout matches the real
+one closely. It is not surveyed, though, because a callout sits near its model
+rather than exactly on it. FIRST's mat artwork is their copyright and is not
+reproduced; the objects drawn here are original schematics that say what a
+mission is, not what it looks like.
+
+Unlock the models with the Lock button to drag them to their measured places;
+the layout saves to the browser, and Export / Import moves a corrected layout
+to the rest of the team.
 
 Robot configuration is a single constant near the top of the script (`ROBOT`):
 drive motors on ports C and D, attachment motor on E, colour sensor A,
