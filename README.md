@@ -13,8 +13,13 @@ hardware. 7 units, 21 lessons, 63 tasks, roughly two hours of class time.
 - **One language on screen at a time**, switched by the button in the header.
 - **Real SPIKE semantics.** Movement blocks carry motor travel, not robot
   travel: 180 motor degrees is a 90° turn on this robot's geometry.
-- **Live simulation.** One grid square = one wheel rotation = 27.6 cm, which is
-  what makes the distance sensor's centimetre readings real.
+- **Live simulation.** One grid square is one wheel rotation. SPIKE Prime
+  ships two drive wheels and the picker in Free Build switches between them:
+  88 mm covers 27.6 cm a rotation, 56 mm covers 17.6. That constant is what
+  makes the distance sensor's centimetre readings real.
+- **Adjustable split.** The divider between the code and the field can be
+  dragged, double-clicked to reset, or moved with the arrow keys, and the
+  field redraws as it moves.
 - **FLL competition mats** in Free Build. The mat is drawn to scale from its
   real 2362 x 1143 mm, which is 8.56 x 4.14 wheel rotations, so the robot,
   the grid and the mission models all share one measurement system.

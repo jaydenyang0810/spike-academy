@@ -210,7 +210,21 @@ header{
 }
 
 /* ============================ WORKSPACE ============================ */
-#ws{flex:1;display:none;overflow:hidden;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+#ws{flex:1;display:none;overflow:hidden;
+  grid-template-columns:minmax(0,var(--ws-l,60%)) 8px minmax(0,1fr)}
+.ws-split{
+  background:var(--line);cursor:col-resize;position:relative;
+  transition:background .15s;touch-action:none;
+}
+.ws-split::before{                       /* the grip, and a wider hit area */
+  content:'';position:absolute;inset:0 -4px;
+}
+.ws-split::after{
+  content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:2px;height:34px;border-radius:2px;background:var(--ink-3,#7A8A99);opacity:.5;
+}
+.ws-split:hover,.ws-split.on{background:var(--accent,#FFCD00)}
+.ws-split:focus-visible{outline:3px solid var(--accent,#FFCD00);outline-offset:-3px}
 #ws.on{display:grid}
 
 /* ---- left: instructions + blockly ---- */
@@ -484,6 +498,7 @@ body.py-mode .pypane{display:flex}
 @media (max-width:1024px){
   .pyconsole{height:92px}
   #ws.on{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
+  .ws-split{display:none}
   .pane-l{border-right:none;border-bottom:1px solid var(--line)}
   .masthead{grid-template-columns:1fr}
   .prog-ring{flex-direction:row;gap:12px}
@@ -576,6 +591,9 @@ body.py-mode .pypane{display:flex}
     </div>
   </div>
 
+  <div class="ws-split" id="wsSplit" role="separator" aria-orientation="vertical"
+       tabindex="0" aria-label="Resize the code and field panes"
+       aria-valuemin="24" aria-valuemax="78" aria-valuenow="60"></div>
   <div class="pane-r">
     <div class="field-wrap">
       <div class="mat-bar" id="matBar">
@@ -589,6 +607,10 @@ body.py-mode .pypane{display:flex}
           <span id="zoomLabel">100%</span>
           <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
         </span>
+        <select id="wheelSel" aria-label="Wheel size">
+          <option value="88">88mm 輪 · wheel</option>
+          <option value="56">56mm 輪 · wheel</option>
+        </select>
         <span class="mat-rot">
           <button type="button" id="rotL" aria-label="Turn the robot anticlockwise">&#8634;</button>
           <span id="rotLabel">90&deg;</span>
@@ -4547,7 +4569,13 @@ const HALF_H = BODY_H / 2;                     // 0.30
 const SENSOR_AT = 0.5;
 const WALL_PAD = 0.36;                         // a shade over HALF_W, for collisions
 
-const CM_PER_SQ = 27.6;          // 88 mm SPIKE wheel: one rotation covers 27.6 cm
+/* SPIKE Prime ships two drive wheels and the choice changes everything a
+   distance means. The 88 mm wheel covers 27.6 cm a rotation, the 56 mm one
+   covers 17.6. A grid square is one rotation, so the smaller wheel puts more,
+   finer squares on a mat of fixed size, and the robot, which is defined in
+   squares so that it fits inside one, comes out smaller with it. */
+let WHEEL_MM = 88;
+let CM_PER_SQ = Math.PI * WHEEL_MM / 10;   // 27.6 cm
 const TRACK_CM  = 17.57;         // distance between the two drive wheels
 
 /* TRUE MOTOR-DEGREE SEMANTICS, as in the real SPIKE app.
@@ -4558,13 +4586,27 @@ const TRACK_CM  = 17.57;         // distance between the two drive wheels
    motor rotation, i.e. 180 motor degrees produce a 90 degree robot turn.
    Kids meet this ratio in Unit 3 and then learn in Unit 7 why the gyro is the
    answer to not having to do this arithmetic at all. */
-const SPIN_DEG_PER_ROT = 360 * CM_PER_SQ / (Math.PI * TRACK_CM);
+let SPIN_DEG_PER_ROT = 360 * CM_PER_SQ / (Math.PI * TRACK_CM);
+
+/* Changing the wheel re-derives both, then makes every measured thing on
+   screen recompute: the mat's size in squares, the fit, and the readouts. */
+function setWheel(mm) {
+  WHEEL_MM = (mm === 56 ? 56 : 88);
+  CM_PER_SQ = Math.PI * WHEEL_MM / 10;
+  SPIN_DEG_PER_ROT = 360 * CM_PER_SQ / (Math.PI * TRACK_CM);
+  try { localStorage.setItem('spike-wheel', String(WHEEL_MM)); } catch (e) {}
+  const sel = $('wheelSel'); if (sel) sel.value = String(WHEEL_MM);
+  if (matKey) setMat(matKey);              /* re-derives grid, spawn and fit */
+  else if (step) { fitCanvas(); drawField(); }
+  if (typeof drawHub === 'function' && S) drawHub();
+}
 
 /* ==========================================================================
    FLL competition mats
    --------------------------------------------------------------------------
    The mat is 2362 x 1143 mm. One grid square is one wheel rotation, which
-   CM_PER_SQ fixes at 27.6 cm, so a mat is 8.56 x 4.14 squares. Everything
+   CM_PER_SQ fixes at the chosen wheel, so a mat is 8.56 x 4.14 squares on
+   the 88 mm wheel and 13.4 x 6.5 on the 56 mm one. Everything
    here is declared in centimetres and converted once, which keeps the mat,
    the mission models and the robot on a single real-world scale.
 
@@ -5233,6 +5275,65 @@ function syncZoomUI() {
   const zi = $('zoomIn'), zo = $('zoomOut');
   if (zi) zi.disabled = view.z >= 7.99;
   if (zo) zo.disabled = view.z <= 1.001;
+}
+
+/* ------------------------------------------------------- workspace splitter */
+/* The blocks side and the field side are a fixed 1.5:1 split, which is wrong
+   for both ends of the work: laying out a long program wants the left side,
+   and reading a mat wants the right. The divider makes that adjustable, and
+   the field is redrawn as it moves so the mat grows into whatever it is
+   given rather than waiting for the drag to finish. */
+const WS_SPLIT_KEY = 'spike-ws-split';
+const WS_MIN = 24, WS_MAX = 78, WS_DEFAULT = 60;
+
+function applySplit(pct, save) {
+  pct = Math.max(WS_MIN, Math.min(WS_MAX, pct));
+  document.documentElement.style.setProperty('--ws-l', pct.toFixed(2) + '%');
+  if (save) { try { localStorage.setItem(WS_SPLIT_KEY, String(pct)); } catch (e) {} }
+  /* both sides measure themselves, so both need telling */
+  if (typeof ws !== 'undefined' && ws && window.Blockly) Blockly.svgResize(ws);
+  if (step) { fitCanvas(); drawField(); }
+  const h = $('wsSplit');
+  if (h) h.setAttribute('aria-valuenow', Math.round(pct));
+  return pct;
+}
+
+function wireSplit() {
+  const h = $('wsSplit'), box = $('ws');
+  if (!h || !box) return;
+  let saved = WS_DEFAULT;
+  try { const v = parseFloat(localStorage.getItem(WS_SPLIT_KEY)); if (v >= WS_MIN && v <= WS_MAX) saved = v; } catch (e) {}
+  applySplit(saved, false);
+
+  let dragging = false;
+  const pct = clientX => {
+    const b = box.getBoundingClientRect();
+    return ((clientX - b.left) / b.width) * 100;
+  };
+  h.addEventListener('pointerdown', e => {
+    /* the stacked layout has no vertical divider to drag */
+    if (getComputedStyle(h).display === 'none') return;
+    dragging = true; h.setPointerCapture(e.pointerId);
+    h.classList.add('on'); document.body.style.cursor = 'col-resize';
+    e.preventDefault();
+  });
+  h.addEventListener('pointermove', e => { if (dragging) applySplit(pct(e.clientX), false); });
+  const stop = e => {
+    if (!dragging) return;
+    dragging = false; h.classList.remove('on'); document.body.style.cursor = '';
+    applySplit(pct(e.clientX !== undefined ? e.clientX : 0), true);
+  };
+  h.addEventListener('pointerup', stop);
+  h.addEventListener('pointercancel', stop);
+  /* double click puts it back, which is quicker than dragging it home */
+  h.addEventListener('dblclick', () => applySplit(WS_DEFAULT, true));
+  /* and the keyboard can move it, since it is a real separator */
+  h.addEventListener('keydown', e => {
+    const cur = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ws-l')) || WS_DEFAULT;
+    if (e.key === 'ArrowLeft')  { applySplit(cur - (e.shiftKey ? 8 : 2), true); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { applySplit(cur + (e.shiftKey ? 8 : 2), true); e.preventDefault(); }
+    if (e.key === 'Home')       { applySplit(WS_DEFAULT, true); e.preventDefault(); }
+  });
 }
 
 /* ------------------------------------------------------------- mat surface */
@@ -6399,7 +6500,7 @@ function setMat(key) {
 
 function syncMatUI() {
   const on = !!matKey;
-  ['zoomIn', 'zoomOut', 'zoomLabel', 'rotL', 'rotR', 'rotLabel', 'matLock', 'matExport', 'matReset', 'matImportL', 'matHelp'].forEach(id => {
+  ['zoomIn', 'zoomOut', 'zoomLabel', 'wheelSel', 'rotL', 'rotR', 'rotLabel', 'matLock', 'matExport', 'matReset', 'matImportL', 'matHelp'].forEach(id => {
     const el = $(id); if (el) el.style.display = on ? '' : 'none';
   });
   const lk = $('matLock');
@@ -6604,6 +6705,7 @@ function wireMat() {
   }, { passive: false });
 
   const sel = $('matSel');    if (sel) sel.onchange = () => setMat(sel.value);
+  const wh  = $('wheelSel');  if (wh) wh.onchange  = () => setWheel(+wh.value);
   const zi  = $('zoomIn');    if (zi) zi.onclick  = () => zoomAt(1.35);
   const zo  = $('zoomOut');   if (zo) zo.onclick  = () => zoomAt(1 / 1.35);
   const rl  = $('rotL');      if (rl) rl.onclick  = e => rotateRobot(e.shiftKey ? -15 : -45);
@@ -6668,6 +6770,8 @@ function boot() {
 
   /* clicking the robot presses the force sensor (port F bumper) */
   wireMat();
+  wireSplit();
+  try { const w = +localStorage.getItem('spike-wheel'); if (w === 56 || w === 88) setWheel(w); } catch (e) {}
 
 
   window.addEventListener('resize', () => { if (step) { fitCanvas(); drawField(); } });
