@@ -335,6 +335,7 @@ body.py-mode .pypane{display:flex}
 .field-wrap.sandbox{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
 .field-wrap.sandbox .mat-bar{display:flex}
 .field-wrap.sandbox.mat-on #field{max-width:100%;max-height:100%}
+.field-wrap.sandbox.mat-on #field:focus-visible{outline:3px solid #FFCD00;outline-offset:2px}
 .mat-bar select,.mat-bar button,.mat-imp{
   font:600 12px system-ui,sans-serif;color:#E8EEF4;
   background:rgba(16,26,38,.88);border:1px solid rgba(255,255,255,.22);
@@ -5219,7 +5220,7 @@ function zoomAt(factor, px, py) {
   view.z = Math.min(8, Math.max(1, view.z * factor));
   const after = matU();
   view.ox = px - gx * after; view.oy = py - gy * after;
-  clampView(); cv._cell = matU(); drawField(); syncZoomUI();
+  clampView(); cv._cell = matU(); drawField(); syncZoomUI(); matCursor(); syncMatUI();
 }
 
 function syncZoomUI() {
@@ -6353,6 +6354,9 @@ function setMat(key) {
   matKey = MATS[key] ? key : null;
   const wrap = $('field').parentElement;
   wrap.classList.toggle('mat-on', !!matKey);
+  /* focusable only in mat mode, so the arrow keys have somewhere to land */
+  if (matKey) $('field').setAttribute('tabindex', '0');
+  else $('field').removeAttribute('tabindex');
   if (matKey) {
     grid = { c: cmSq(MAT_W_CM), r: cmSq(MAT_H_CM) };
     matModels = loadMatModels(matKey);
@@ -6364,7 +6368,7 @@ function setMat(key) {
   }
   view.z = 1; view.ox = 0; view.oy = 0;
   S = freshState();
-  fitCanvas(); drawField(); drawHub(); syncZoomUI(); syncMatUI();
+  fitCanvas(); drawField(); drawHub(); syncZoomUI(); syncMatUI(); matCursor();
 }
 
 function syncMatUI() {
@@ -6378,9 +6382,11 @@ function syncMatUI() {
     lk.classList.toggle('on', !matLocked);
   }
   const h = $('matHelp');
-  if (h) h.textContent = matLocked
-    ? L1('模型位置為估計值，解鎖後可拖曳校正', 'Model positions are estimates. Unlock to drag and correct them.')
-    : L1('拖曳模型到正確位置，會自動儲存', 'Drag a model to its real place. Saved automatically.');
+  if (h) h.textContent = !matLocked
+    ? L1('拖曳模型到正確位置，會自動儲存', 'Drag a model to its real place. Saved automatically.')
+    : (canPan()
+      ? L1('拖曳可移動視野，方向鍵也可以', 'Drag to move around the field. Arrow keys work too.')
+      : L1('模型位置為估計值，解鎖後可拖曳校正', 'Model positions are estimates. Unlock to drag and correct them.'));
   const sel = $('matSel'); if (sel) sel.value = matKey || '';
 }
 
@@ -6427,6 +6433,54 @@ function resetMat() {
   drawField();
 }
 
+/* The mat is only draggable once it is bigger than its viewport, and nothing
+   on a canvas says so by itself, so the cursor carries that: a grab hand when
+   there is somewhere to pan to, a move cursor over a model that is unlocked,
+   and a closed hand while actually dragging. */
+function matCursor(force) {
+  const cv = $('field');
+  if (!matKey) { cv.style.cursor = ''; return; }
+  if (force) { cv.style.cursor = force; return; }
+  cv.style.cursor = canPan() ? 'grab' : 'default';
+}
+function canPan() {
+  const cv = $('field');
+  if (!matKey || !cv._w) return false;
+  return grid.c * matU() > cv._w + 1 || grid.r * matU() > cv._h + 1;
+}
+function overDraggable(g) {
+  if (!matKey) return false;
+  if (!matLocked) {
+    for (let i = matModels.length - 1; i >= 0; i--) {
+      const md = matModels[i];
+      if (Math.abs(g.c - cmSq(md.x)) <= cmSq(md.w) / 2 &&
+          Math.abs(g.r - cmSq(md.y)) <= cmSq(md.h) / 2) return true;
+    }
+  }
+  return Math.hypot(g.c - S.c, g.r - S.r) < 0.6;
+}
+
+/* Arrow keys pan and +/- zoom once the field has focus, which is both an
+   accessibility route and the precise way to nudge a view. */
+function matKeys(e) {
+  if (!matKey) return;
+  const step = e.shiftKey ? 120 : 40;
+  let used = true;
+  switch (e.key) {
+    case 'ArrowLeft':  view.ox += step; break;
+    case 'ArrowRight': view.ox -= step; break;
+    case 'ArrowUp':    view.oy += step; break;
+    case 'ArrowDown':  view.oy -= step; break;
+    case '+': case '=': zoomAt(1.35); return;
+    case '-': case '_': zoomAt(1 / 1.35); return;
+    case '0': setMat(matKey); return;
+    default: used = false;
+  }
+  if (!used) return;
+  e.preventDefault();
+  clampView(); drawField();
+}
+
 /* --------------------------------------------------------- mat interaction */
 function wireMat() {
   const cv = $('field');
@@ -6451,13 +6505,18 @@ function wireMat() {
       cv.setPointerCapture(e.pointerId); return;
     }
     if (matKey) {                                     /* otherwise pan the mat */
+      if (!canPan()) return;
       drag = { kind: 'pan', px: e.clientX, py: e.clientY, ox: view.ox, oy: view.oy };
+      matCursor('grabbing');
       cv.setPointerCapture(e.pointerId);
     }
   });
 
   cv.addEventListener('pointermove', e => {
-    if (!drag) return;
+    if (!drag) {
+      if (matKey && S) matCursor(overDraggable(toGrid(e.clientX, e.clientY)) ? 'move' : null);
+      return;
+    }
     if (drag.kind === 'pan') {
       view.ox = drag.ox + (e.clientX - drag.px);
       view.oy = drag.oy + (e.clientY - drag.py);
@@ -6485,10 +6544,12 @@ function wireMat() {
     if (drag.kind === 'robot' && drag.moved < 3) { S.forceClick = simNow || 1e-6; drawHub(); }
     if (drag.kind === 'model') saveMat();
     drag = null;
+    matCursor();
   };
   cv.addEventListener('pointerup', end);
   cv.addEventListener('pointercancel', end);
 
+  cv.addEventListener('keydown', matKeys);
   cv.addEventListener('wheel', e => {
     if (!matKey) return;
     e.preventDefault();
@@ -6499,7 +6560,7 @@ function wireMat() {
   const sel = $('matSel');    if (sel) sel.onchange = () => setMat(sel.value);
   const zi  = $('zoomIn');    if (zi) zi.onclick  = () => zoomAt(1.35);
   const zo  = $('zoomOut');   if (zo) zo.onclick  = () => zoomAt(1 / 1.35);
-  const lk  = $('matLock');   if (lk) lk.onclick  = () => { matLocked = !matLocked; syncMatUI(); drawField(); };
+  const lk  = $('matLock');   if (lk) lk.onclick  = () => { matLocked = !matLocked; syncMatUI(); drawField(); matCursor(); };
   const ex  = $('matExport'); if (ex) ex.onclick  = exportMat;
   const rs  = $('matReset');  if (rs) rs.onclick  = resetMat;
   const im  = $('matImport'); if (im) im.onchange = () => { if (im.files[0]) importMat(im.files[0]); im.value = ''; };
