@@ -3538,6 +3538,7 @@ function defineBlocks() {
     const i = this.appendDummyInput();
     i.appendField(F.img(ICON.one(C.motor), 22, 22));
     i.appendField(F.d(OPT.ports), 'PORT');
+    this.setFieldValue(ROBOT.arm, 'PORT');
     i.appendField(F.d(OPT.spin), 'DIR');
     lab(i, '運行', 'run for');
     this.appendValueInput('N').setCheck('Number');
@@ -3549,6 +3550,7 @@ function defineBlocks() {
     const i = this.appendDummyInput();
     i.appendField(F.img(ICON.one(C.motor), 22, 22));
     i.appendField(F.d(OPT.ports), 'PORT');
+    this.setFieldValue(ROBOT.arm, 'PORT');
     i.appendField(F.d(OPT.spin), 'DIR');
     lab(i, '啟動馬達', 'start motor');
   });
@@ -3557,6 +3559,7 @@ function defineBlocks() {
     const i = this.appendDummyInput();
     i.appendField(F.img(ICON.one(C.motor), 22, 22));
     i.appendField(F.d(OPT.ports), 'PORT');
+    this.setFieldValue(ROBOT.arm, 'PORT');
     lab(i, '關閉馬達', 'stop motor');
   });
 
@@ -3564,6 +3567,7 @@ function defineBlocks() {
     const i = this.appendDummyInput();
     i.appendField(F.img(ICON.one(C.motor), 22, 22));
     i.appendField(F.d(OPT.ports), 'PORT');
+    this.setFieldValue(ROBOT.arm, 'PORT');
     lab(i, '將速度設定為', 'set speed to');
     i.appendField(F.n(75, 1, 100, 1), 'N');
     i.appendField(new Blockly.FieldLabel('%'));
@@ -3573,6 +3577,7 @@ function defineBlocks() {
     const i = this.appendDummyInput();
     i.appendField(F.img(ICON.one(C.motor), 20, 20));
     i.appendField(F.d(OPT.ports), 'PORT');
+    this.setFieldValue(ROBOT.arm, 'PORT');
     lab(i, '位置', 'position');
   });
 
@@ -4021,6 +4026,7 @@ const CUR = [
              pyEn: 'move_for_degrees already works in degrees: 360 degrees = 1 rotation = 1 square. Drive 1080 degrees to the target.',
              blocks: ['ev_start', 'mv_move'], spawn: { c: 1.5, r: 3.5, a: 90 }, goal: { c: 4.5, r: 3.5 },
              whyZh: '記得把積木上的下拉選單從「圈」改成「度」。',
+             needDeg: true, win: S => S.atGoal() && (mode === 'python' || S.degMoves > 0),
              whyEn: 'Remember to change the dropdown on the block from rotations to degrees.' })
       ]
     },
@@ -4823,7 +4829,7 @@ function freshState() {
     armRot: 0, armDir: 'CW', armAngle: 0, armCmd: null, armSpeed: 75,
     matrix: new Array(25).fill(false), matrixCount: 0, bright: 75,
     centerColor: null, wrote: false, beeps: 0, lastSound: null, volume: 100,
-    vars: { A: 0, B: 0 }, used: {}, myCalls: 0,
+    vars: { A: 0, B: 0 }, used: {}, myCalls: 0, degMoves: 0,
     gotItems: 0, items: (step.items || []).map(i => ({ c: i.c, r: i.r, got: false })),
     crashed: false, offField: false, forceClick: 0, moved: 0,
     atGoal() {
@@ -4959,7 +4965,7 @@ function evalNum(t) {
     case 'sn_reflect': return REFLECT[paintAt(sensorPos())] || 0;
     case 'sn_force': return forcePressed() ? 100 : 0;
     case 'sn_yaw': return yawAngle();
-    case 'mt_pos': return Math.round(S.armAngle) % 360;
+    case 'mt_pos': return t.getFieldValue('PORT') === ROBOT.arm ? Math.round(S.armAngle) % 360 : 0;
     default: return 0;
   }
 }
@@ -5006,6 +5012,7 @@ async function one(b) {
       const sign = b.type === 'mv_move' ? (b.getFieldValue('DIR') === 'UP' ? 1 : -1) : 1;
       const steer = b.type === 'mv_steer' ? STEER_VAL[b.getFieldValue('STEER')] : 0;
       const a = unitAmount(b);
+      if (b.type === 'mv_move' && b.getFieldValue('UNIT') === 'DEG') S.degMoves++;   // lets a step insist on degrees
       /* the block's number is motor travel, for driving and turning alike */
       const target = a.secs != null ? null : a.rot;
       S.drive = { sign, steer, done: 0, target, finished: false };
@@ -5025,8 +5032,9 @@ async function one(b) {
     case 'mv_stop': S.drive = null; await sleep(40); break;
 
     /* ---- single motor ---- */
-    case 'mt_speed': S.armSpeed = num(b, 'N', 75); await sleep(30); break;
+    case 'mt_speed': if (b.getFieldValue('PORT') === ROBOT.arm) S.armSpeed = num(b, 'N', 75); await sleep(30); break;
     case 'mt_run': {
+      if (b.getFieldValue('PORT') !== ROBOT.arm) { await sleep(260); break; }   // not the attachment motor: the arm never moves
       const a = unitAmount(b);
       const rot = a.secs != null ? a.secs * 1.6 : (a.rot != null ? a.rot : a.deg / 360);
       S.armDir = b.getFieldValue('DIR');
@@ -5034,10 +5042,11 @@ async function one(b) {
       const m = S.armCmd; await until(() => m.finished); break;
     }
     case 'mt_start':
+      if (b.getFieldValue('PORT') !== ROBOT.arm) { await sleep(20); break; }
       S.armDir = b.getFieldValue('DIR');
       S.armCmd = { dir: S.armDir, speed: S.armSpeed, done: 0, target: null, finished: false };
       await sleep(20); break;
-    case 'mt_stop': S.armCmd = null; await sleep(30); break;
+    case 'mt_stop': if (b.getFieldValue('PORT') === ROBOT.arm) S.armCmd = null; await sleep(30); break;
 
     /* ---- control ---- */
     case 'ct_wait':   await sleep(num(b, 'N', 1) * 1000); break;
@@ -5216,7 +5225,7 @@ function diagnose(why) {
   if (step.items && S.gotItems < S.items.length)
     return ['⭐ 還有 ' + (S.items.length - S.gotItems) + ' 顆星星沒收集到。',
             '⭐ ' + (S.items.length - S.gotItems) + ' star(s) still to collect.'];
-  if (step.whyZh) return [step.whyZh, step.whyEn];
+  if (step.whyZh && !(step.needDeg && S.degMoves > 0)) return [step.whyZh, step.whyEn];
 
   if (mode === 'python' && S.myCalls === 0 && step.win && /myCalls/.test(step.win.toString()))
     return ['🐍 這一關要你用 def 寫一個自己的函式，然後呼叫它——目前還沒有看到。',
@@ -6401,7 +6410,47 @@ function renderPorts() {
   });
 }
 
+/* Blockly's own menu text (right-click menu, variable prompts) comes from Blockly.Msg,
+   which ships in English. Swap it with the app language; the English originals are
+   captured the first time so switching back restores them exactly. */
+const BLK_MSG_ZH = {
+  "UNDO": "復原",
+  "REDO": "重做",
+  "CLEAN_UP": "整理積木",
+  "COLLAPSE_ALL": "收合所有積木",
+  "EXPAND_ALL": "展開所有積木",
+  "COLLAPSE_BLOCK": "收合積木",
+  "EXPAND_BLOCK": "展開積木",
+  "DELETE_BLOCK": "刪除積木",
+  "DELETE_X_BLOCKS": "刪除 %1 個積木",
+  "DELETE_ALL_BLOCKS": "要刪除全部 %1 個積木嗎？",
+  "DUPLICATE_BLOCK": "複製",
+  "ADD_COMMENT": "加入註解",
+  "REMOVE_COMMENT": "移除註解",
+  "DISABLE_BLOCK": "停用積木",
+  "ENABLE_BLOCK": "啟用積木",
+  "HELP": "說明",
+  "INLINE_INPUTS": "內嵌輸入",
+  "EXTERNAL_INPUTS": "外接輸入",
+  "NEW_VARIABLE": "建立變數…",
+  "NEW_VARIABLE_TITLE": "新變數名稱：",
+  "RENAME_VARIABLE": "重新命名變數…",
+  "RENAME_VARIABLE_TITLE": "將所有「%1」變數重新命名為：",
+  "DELETE_VARIABLE": "刪除「%1」變數",
+  "DELETE_VARIABLE_CONFIRMATION": "要刪除「%2」變數的 %1 處使用嗎？",
+  "WORKSPACE_COMMENT_DEFAULT_TEXT": "說點什麼…",
+  "CHANGE_VALUE_TITLE": "修改數值："
+};
+const BLK_MSG_EN = {};
+function localiseBlockly() {
+  for (const k in BLK_MSG_ZH) {
+    if (!(k in BLK_MSG_EN)) BLK_MSG_EN[k] = Blockly.Msg[k];
+    Blockly.Msg[k] = lang === 'zh' ? BLK_MSG_ZH[k] : BLK_MSG_EN[k];
+  }
+}
+
 function staticUI() {
+  localiseBlockly();
   setPair('brand', UI.brand[0], UI.brand[1]);
   setPair('mh', UI.mh[0], UI.mh[1]);
   setPair('ms', UI.ms[0], UI.ms[1]);
