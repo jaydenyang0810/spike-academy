@@ -5191,6 +5191,44 @@ function finish(why) {
   fb('bad', d[0], d[1]);
 }
 
+/** When a step needs more than reaching the target (arm turns, beeps, custom block
+    calls...), say which of those is still missing. Reads the numbers out of the step's
+    own win() so the hint can never disagree with the rule that decided the verdict. */
+function unmetHint(atGoal) {
+  const src = step.win ? step.win.toString() : '';
+  const pre = atGoal ? ['你已經到達目標了，但', 'You reached the target, but '] : ['', ''];
+  const say = (zh, en) => ['🔎 ' + pre[0] + zh,
+                           pre[1] + (atGoal ? en : en.charAt(0).toUpperCase() + en.slice(1))];
+  let m;
+  if (/armDir === 'CCW'/.test(src) && S.armDir !== 'CCW')
+    return say('手臂還沒有「逆時針」轉。', 'the arm has not turned counter-clockwise.');
+  if ((m = /armRot >= ([\d.]+)/.exec(src)) && S.armRot < +m[1] - 1e-6) {
+    const thr = +m[1], need = Math.round(thr * 10) % 10 === 9 ? Math.round(thr) : thr;
+    if (S.armRot < 0.05) return say('手臂完全沒有轉，要用馬達 E 的積木讓它轉。', 'the arm never turned. Use a motor E block to turn it.');
+    return say('手臂只轉了 ' + S.armRot.toFixed(1) + ' 圈，這一關要轉到至少 ' + need + ' 圈。',
+               'the arm only turned ' + S.armRot.toFixed(1) + ' rotations; this task needs at least ' + need + '.');
+  }
+  if ((m = /armSpeed <= ([\d.]+)/.exec(src)) && S.armSpeed > +m[1])
+    return say('手臂馬達的速度要設在 ' + m[1] + '% 或以下，現在是 ' + Math.round(S.armSpeed) + '%。',
+               'the arm motor speed must be ' + m[1] + '% or less; it is ' + Math.round(S.armSpeed) + '%.');
+  if ((m = /myCalls >= (\d+)/.exec(src)) && S.myCalls < +m[1])
+    return say('你的自訂積木只被呼叫了 ' + S.myCalls + ' 次，這一關要至少 ' + m[1] + ' 次。',
+               'your My Block only ran ' + S.myCalls + ' time(s); this task needs at least ' + m[1] + '.');
+  if (/beeps/.test(src)) {
+    const need = (m = /beeps >= (\d+)/.exec(src)) ? +m[1] : 1;
+    if (S.beeps < need) return say('聲音只響了 ' + S.beeps + ' 次，這一關要至少 ' + need + ' 次。',
+                                   'only ' + S.beeps + ' sound(s) played; this task needs at least ' + need + '.');
+  }
+  if (/matrixCount/.test(src)) {
+    const need = (m = /matrixCount >= (\d+)/.exec(src)) ? +m[1] : 1;
+    if (S.matrixCount < need) return say('燈光矩陣只顯示了 ' + S.matrixCount + ' 次，這一關要至少 ' + need + ' 次。',
+                                         'the light matrix was only shown ' + S.matrixCount + ' time(s); this task needs at least ' + need + '.');
+  }
+  if (/centerColor === 'RED'/.test(src) && S.centerColor !== 'RED')
+    return say('中央按鈕的燈還不是紅色。', 'the centre button light is not red yet.');
+  return null;
+}
+
 /** Concrete, specific failure feedback — never the answer. */
 function diagnose(why) {
   if (S.crashed)  return ['💥 你撞到牆了。在撞上之前就要轉彎或停下來。',
@@ -5239,6 +5277,10 @@ function diagnose(why) {
     const g = step.goal, dc = S.c - g.c, dr = S.r - g.r;
     const dd = Math.hypot(dc, dr);
     const n = dd.toFixed(1);
+    if (dd <= (g.tol || 0.45)) {   // standing on the target: the problem is something else
+      return unmetHint(true) || ['🔎 你已經到達目標了，但這一關還有別的條件沒達成。再讀一次說明。',
+                                 '🔎 You reached the target, but something else this task asks for is missing. Read the instruction again.'];
+    }
     if (dd > 2.2) return ['🎯 你離目標還有大約 ' + n + ' 格，差滿多的。再數一次格子。',
                           '🎯 You finished about ' + n + ' squares from the target. Count the squares again.'];
     if (Math.abs(dr) > Math.abs(dc) + 0.3)
@@ -5250,6 +5292,7 @@ function diagnose(why) {
   if (mode === 'python' && S.moved < 0.05 && S.armRot < 0.05)
     return ['🐍 機器人完全沒有動。每個 motor 或 motor_pair 的動作前面都要加 await 才會執行。',
             '🐍 The robot never moved. Every motor or motor_pair action needs await in front of it to actually run.'];
+  const h = unmetHint(false); if (h) return h;
   return ['🔁 還沒完成任務條件，再看一次上面的說明。',
           '🔁 The task conditions were not met. Read the instruction again.'];
 }
@@ -6194,6 +6237,40 @@ function enterWorkspace() {
  * bin is the drop target. The bin's rect is read from the DOM so it always
  * matches what is on screen, including the 85% scale.
  */
+/* Blockly draws the trash can and the zoom buttons from one sprite sheet, and by
+   default fetches it from blockly-demo.appspot.com, which no longer serves it (404),
+   so they showed as blank squares. This is our own copy, drawn on Blockly's 96x124
+   layout (trash lid 0,32 / body 0,48 / reset 0,92 / zoom in 32,92 / zoom out 64,92)
+   and kept inline so the page needs nothing from outside. */
+const BLK_SPRITE_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="124" viewBox="0 0 96 124">' +
+  '<g fill="#7C8896">' +
+    '<rect x="17" y="35" width="13" height="5" rx="1.6"/>' +
+    '<rect x="3" y="40" width="41" height="6" rx="2"/>' +
+    '<path d="M5 48H42L39 90Q38.7 92 36.5 92H10.5Q8.3 92 8 90Z" fill="#8794A3"/>' +
+  '</g>' +
+  '<g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".9">' +
+    '<path d="M16 55V85M23.5 55V85M31 55V85"/>' +
+  '</g>' +
+  '<g fill="none" stroke="#7C8896" stroke-width="3" stroke-linecap="round">' +
+    '<circle cx="16" cy="108" r="7"/>' +
+    '<path d="M16 95V98M16 118V121M3 108H6M26 108H29"/>' +
+  '</g>' +
+  '<circle cx="16" cy="108" r="2.6" fill="#7C8896"/>' +
+  '<circle cx="48" cy="108" r="13" fill="#7C8896"/>' +
+  '<circle cx="80" cy="108" r="13" fill="#7C8896"/>' +
+  '<g stroke="#fff" stroke-width="3.2" stroke-linecap="round">' +
+    '<path d="M42 108H54M48 102V114M74 108H86"/>' +
+  '</g>' +
+  '</svg>';
+const BLK_SPRITE_URL = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(BLK_SPRITE_SVG);
+function installBlocklySprites() {
+  document.querySelectorAll('#blockly image').forEach(im => {
+    const h = im.getAttributeNS('http://www.w3.org/1999/xlink', 'href') || im.getAttribute('href') || '';
+    if (/sprites\.png/.test(h)) im.setAttributeNS('http://www.w3.org/1999/xlink', 'href', BLK_SPRITE_URL);
+  });
+}
+
 function installTrashContactHitbox(workspace) {
   const original = workspace.getDragTarget.bind(workspace);
   workspace.getDragTarget = function (e) {
@@ -6264,6 +6341,7 @@ function ensureWorkspace() {
   try { ws = Blockly.inject('blockly', opts); }
   catch (e) { console.warn('zelos unavailable', e); opts.renderer = 'geras'; ws = Blockly.inject('blockly', opts); }
 
+  installBlocklySprites();
   installTrashContactHitbox(ws);
 
   new ResizeObserver(() => {
