@@ -4545,6 +4545,24 @@ const CUR = [
 }
 ];
 
+/* Once "set movement motors to" has been taught (Unit 1, "Which Motors Are the
+   Wheels?"), every later step that drives starts with the wheels unassigned, so
+   the child has to set C+D in each program, as on the real hub. The block is added
+   to those steps' palettes; free build is left alone. */
+(function requireWheelSetup() {
+  const DRIVE = ['mv_move', 'mv_steer', 'mv_start', 'mv_startsteer'];
+  let taught = false;
+  CUR.forEach(u => u.lessons.forEach(l => {
+    if (taught) l.steps.forEach(s => {
+      if (!Array.isArray(s.blocks) || s.pyOnly || s.pair !== undefined) return;
+      if (!s.blocks.some(t => DRIVE.includes(t))) return;
+      if (!s.blocks.includes('mv_setmotors')) s.blocks = s.blocks.concat('mv_setmotors');
+      s.wheelsUnset = true;
+    });
+    if (u.id === 'u1' && l.id === 'assign') taught = true;
+  }));
+})();
+
 /* Free-build sandbox: every block, empty field, no mission. */
 const SANDBOX = {
   id: 'sandbox', zh: '自由創作', en: 'Free Build',
@@ -4825,7 +4843,7 @@ function freshState() {
   const sp = step.spawn || { c: 1.5, r: 3, a: 90 };
   return {
     c: sp.c, r: sp.r, yaw: sp.a || 0, yawRef: sp.a || 0,
-    drive: null, speed: 50, pair: step.pair || 'CD',
+    drive: null, speed: 50, pair: step.pair !== undefined ? step.pair : (step.wheelsUnset ? '' : 'CD'),
     armRot: 0, armDir: 'CW', armAngle: 0, armCmd: null, armSpeed: 75,
     matrix: new Array(25).fill(false), matrixCount: 0, bright: 75,
     centerColor: null, wrote: false, beeps: 0, lastSound: null, volume: 100,
@@ -5191,6 +5209,17 @@ function finish(why) {
   fb('bad', d[0], d[1]);
 }
 
+/** The line under the field before a run: steps that start with unassigned wheels remind the child. */
+function readyMsg() {
+  if (step && step.wheelsUnset)
+    return mode === 'python'
+      ? ['準備就緒。先用 motor_pair.pair( ) 把輪子設成 C 和 D，再按「執行程式」。',
+         'Ready. Pair the wheels on C and D with motor_pair.pair( ) first, then press Run.']
+      : ['準備就緒。先把輪子設成 C+D，再按「執行程式」。',
+         'Ready. Set the movement motors to C+D first, then press Run.'];
+  return U('ready');
+}
+
 /** When a step needs more than reaching the target (arm turns, beeps, custom block
     calls...), say which of those is still missing. Reads the numbers out of the step's
     own win() so the hint can never disagree with the rule that decided the verdict. */
@@ -5237,6 +5266,12 @@ function diagnose(why) {
                           '🚧 The robot drove off the field. That was more squares than the field has.'];
   if (why === 'timeout') return ['⏱ 程式跑太久停不下來了。你的迴圈可能永遠不會結束。',
                                  '⏱ The program ran too long. Your loop may never end.'];
+  if (S.moved < 0.05 && S.pair === '')
+    return mode === 'python'
+      ? ['🔌 輪子沒有轉。你還沒有用 motor_pair.pair( ) 告訴機器人輪子在 C 和 D。',
+         '🔌 The wheels never turned. You have not told the robot its wheels are on C and D with motor_pair.pair( ) yet.']
+      : ['🔌 輪子沒有轉。你還沒有設定輪子：把「將運轉馬達設定為 C+D」放在移動積木的前面。',
+         '🔌 The wheels never turned. You have not set the movement motors yet: put "set movement motors to C+D" before the move blocks.'];
   if (S.moved < 0.05 && S.pair !== 'CD')
     return mode === 'python'
       ? ['🔌 輪子沒有轉。你的驅動馬達接在 C 和 D——檢查 motor_pair.pair( ) 裡的連接埠。',
@@ -6390,7 +6425,7 @@ function loadStep() {
   fitCanvas();
   resetSim();
   setMode(mode);
-  fb('', ...(sandbox ? U('sandboxRun') : U('ready')));
+  fb('', ...(sandbox ? U('sandboxRun') : readyMsg()));
 }
 
 /* ---------------------------------------------------------------- modals */
@@ -6570,7 +6605,7 @@ function toggleLang() {
   ws.updateToolbox(buildToolbox());
   renderRail();
   if (dom) { ws.clear(); Blockly.Xml.domToWorkspace(dom, ws); }
-  fb('', ...(sandbox ? U('sandboxRun') : U('ready')));
+  fb('', ...(sandbox ? U('sandboxRun') : readyMsg()));
   drawHub();
 }
 
@@ -6904,7 +6939,7 @@ function boot() {
   syncFs();
   $('sandbox-btn').onclick = openSandbox;
   $('btn-run').onclick = runProgram;
-  $('btn-reset').onclick = () => { stopProgram(); resetSim(); fb('', ...(sandbox ? U('sandboxRun') : U('ready'))); };
+  $('btn-reset').onclick = () => { stopProgram(); resetSim(); fb('', ...(sandbox ? U('sandboxRun') : readyMsg())); };
   $('led-clear').onclick = () => { ledDraft = new Array(25).fill(false); paintLedGrid(); };
   $('led-ok').onclick = () => {
     if (ledTarget) ledPatterns[ledTarget.id] = ledDraft.slice();
@@ -7866,7 +7901,9 @@ function pyStarter(st) {
 
   if (anyOf('mv_move', 'mv_steer', 'mv_start', 'mv_startsteer', 'mv_stop', 'mv_setmotors', 'mv_speed')) {
     imports.push('motor_pair');
-    body.push('    motor_pair.pair(motor_pair.PAIR_1, port.' + ROBOT.driveL + ', port.' + ROBOT.driveR + ')');
+    body.push(st.blocks === '*'
+      ? '    motor_pair.pair(motor_pair.PAIR_1, port.' + ROBOT.driveL + ', port.' + ROBOT.driveR + ')'
+      : '    # first: tell the robot which two ports are the wheels, with motor_pair.pair(...)');
   }
   if (anyOf('mt_run', 'mt_start', 'mt_stop', 'mt_speed', 'mt_pos')) imports.push('motor');
   if (anyOf('sn_iscolor', 'sn_color', 'sn_isreflect', 'sn_reflect')) imports.push('color_sensor');
@@ -7929,6 +7966,8 @@ function setMode(m) {
   if (m === 'python') { pyLoadForStep(); }
   else if (ws) { Blockly.svgResize(ws); }
   if (step) { fitCanvas(); drawField(); }
+  /* the pre-run reminder names blocks or motor_pair( ) depending on the tab */
+  if (step && step.wheelsUnset && !sandbox && !running && !finished) fb('', ...readyMsg());
 }
 
 /* ------------------------------------------------------------------ start */
